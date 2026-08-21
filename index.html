@@ -3,10 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Office Fleet Manager - Управление автопарком</title>
+    <title>Office Fleet Manager - Авторизация</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 1850px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .container { max-width: 1850px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: none; }
+        
+        /* Экран ввода пароля */
+        #authScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a73e8; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .auth-card { background: #fff; padding: 30px; border-radius: 10px; width: 350px; box-shadow: 0 5px 25px rgba(0,0,0,0.2); text-align: center; }
+        .auth-card h3 { margin-top: 0; color: #1a73e8; }
+        .auth-card input { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; margin-bottom: 15px; text-align: center; }
+        .auth-card button { width: 100%; background: #1a73e8; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .auth-card button:hover { background: #1557b0; }
+        .auth-error { color: #c5221f; font-size: 12px; margin-bottom: 10px; display: none; }
+
         h2 { margin-top: 0; color: #1a73e8; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         
         .dashboard-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
@@ -14,7 +24,7 @@
         .summary-card:hover { transform: translateY(-2px); }
         .card-danger { border-left: 5px solid #c5221f; background: #fdf2f2; color: #c5221f; }
         .card-warning { border-left: 5px solid #b06000; background: #fefcfa; color: #b06000; }
-        .card-success { border-left: 5px solid #137333; background: #f4fdf6; color: #137333; cursor: default; }
+        .card-success { border-left: 5px solid #137333; background: #f4fdf6; color: #137333; }
 
         .list-box { display: none; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-height: 300px; overflow-y: auto; }
         .list-item { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
@@ -52,7 +62,6 @@
         input.edit-input { width: 95%; padding: 3px; font-size: 11px; border: 1px solid #1a73e8; border-radius: 3px; }
         .empty-msg { text-align: center; color: #888; padding: 40px; font-size: 15px; }
 
-        /* Общий лог действий */
         .audit-log-container { margin-top: 30px; background: #fdfdfd; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; }
         .audit-log-container h3 { margin-top: 0; color: #1a73e8; font-size: 15px; }
         .audit-list { max-height: 200px; overflow-y: auto; font-size: 11px; color: #555; }
@@ -73,9 +82,20 @@
 </head>
 <body>
 
-<div class="container">
+<!-- Экран ввода пароля -->
+<div id="authScreen">
+    <div class="auth-card">
+        <h3>🔒 Автопарк Teessatrans</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Введите офисный пароль для доступа:</p>
+        <div id="authError" class="auth-error">Неверный пароль! Попробуйте еще раз.</div>
+        <input type="password" id="passwordInput" placeholder="Пароль..." onkeydown="if(event.key === 'Enter') checkPassword()">
+        <button onclick="checkPassword()">Войти</button>
+    </div>
+</div>
+
+<div class="container" id="mainContainer">
     <h2>
-        🚚 Управление автопарком (Всего в базе: <span id="totalCount">193</span> единицы)
+        🚚 Управление автопарком (Всего в базе: <span id="totalCount">193</span> единиц)
         <button class="btn" onclick="openAddModal()">➕ Добавить единицу</button>
     </h2>
 
@@ -90,9 +110,10 @@
             <div id="countWarning" style="font-size: 20px; font-weight: bold;">0 ед.</div>
             <div style="font-size: 11px; margin-top: 4px; text-decoration: underline;">Нажмите для просмотра</div>
         </div>
-        <div class="summary-card card-success">
+        <div class="summary-card card-success" onclick="toggleList('okListBox')">
             <h4>🟢 В полном порядке</h4>
             <div id="countOk" style="font-size: 20px; font-weight: bold;">0 ед.</div>
+            <div style="font-size: 11px; margin-top: 4px; text-decoration: underline;">Нажмите для просмотра</div>
         </div>
     </div>
 
@@ -104,17 +125,20 @@
         <h4 style="margin-top:0; color:#b06000;">⚠️ Список техники со сроками, истекающими через 30 дней:</h4>
         <div id="warningItemsContainer"></div>
     </div>
+    <div id="okListBox" class="list-box">
+        <h4 style="margin-top:0; color:#137333;">🟢 Список техники в полном порядке:</h4>
+        <div id="okItemsContainer"></div>
+    </div>
 
-    <!-- Раздельный поиск: Тягачи и Прицепы -->
     <div class="search-section">
         <div class="search-group">
             <label>🚚 Тягачи и автомобили (<span id="truckCount">76</span> ед.):</label>
-            <input type="text" id="searchTruckInput" class="search-box" placeholder="🔍 Введите госномер (например, NN1048, KI369) или водителя..." oninput="onTruckSearchInput()" autocomplete="off">
+            <input type="text" id="searchTruckInput" class="search-box" placeholder="🔍 Введите госномер или водителя..." oninput="onTruckSearchInput()" autocomplete="off">
             <div id="truckSuggestions" class="suggestions"></div>
         </div>
         <div class="search-group">
             <label>⛟ Прицепы (<span id="trailerCount">117</span> ед.):</label>
-            <input type="text" id="searchTrailerInput" class="search-box" placeholder="🔍 Введите номер прицепа (например, B412F, U6834)..." oninput="onTrailerSearchInput()" autocomplete="off">
+            <input type="text" id="searchTrailerInput" class="search-box" placeholder="🔍 Введите номер прицепа..." oninput="onTrailerSearchInput()" autocomplete="off">
             <div id="trailerSuggestions" class="suggestions"></div>
         </div>
     </div>
@@ -136,22 +160,18 @@
                 <th>Действия</th>
             </tr>
         </thead>
-        <tbody id="tableBody">
-            <!-- Карточка появляется по клику -->
-        </tbody>
+        <tbody id="tableBody"></tbody>
     </table>
     <div id="emptyMessage" class="empty-msg">Используйте поисковые строки выше для поиска тягачей или прицепов...</div>
 
-    <!-- Общий лог действий -->
     <div class="audit-log-container">
         <h3>📋 Общий лог действий и изменений в парке</h3>
         <div class="audit-list" id="auditLogContainer">
-            <div class="audit-item"><span>Система инициализирована с актуальными данными CSDD</span><span>—</span></div>
+            <div class="audit-item"><span>Система синхронизирована с актуальными данными CSDD</span><span>—</span></div>
         </div>
     </div>
 </div>
 
-<!-- Модальное окно сцепки -->
 <div id="hitchModal" class="modal">
     <div class="modal-content" style="position: relative;">
         <h3 style="margin-top:0; color:#1a73e8;">🔗 Изменение сцепки</h3>
@@ -169,14 +189,13 @@
     </div>
 </div>
 
-<!-- Модальное окно добавления техники -->
 <div id="addModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#1a73e8;">➕ Добавить новую единицу техники</h3>
         <div class="form-group"><label>Госномер:</label><input type="text" id="addNum" placeholder="Например: AB1234"></div>
-        <div class="form-group"><label>Марка / Модель:</label><input type="text" id="addModel" placeholder="Например: VOLVO FH или SCHMITZ SCS"></div>
-        <div class="form-group"><label>ФИО Водителя (для машин):</label><input type="text" id="addDriver" placeholder="Имя Фамилия"></div>
-        <div class="form-group"><label>Дата CSDD регистрации:</label><input type="text" id="addReg" placeholder="ДД.ММ.ГГГГ"></div>
+        <div class="form-group"><label>Марка / Модель:</label><input type="text" id="addModel" placeholder="VOLVO FH или SCHMITZ SCS"></div>
+        <div class="form-group"><label>ФИО Водителя:</label><input type="text" id="addDriver" placeholder="Имя Фамилия"></div>
+        <div class="form-group"><label>Дата CSDD:</label><input type="text" id="addReg" placeholder="ДД.ММ.ГГГГ"></div>
         <div class="form-group"><label>VIN-код:</label><input type="text" id="addVin" placeholder="VIN номер"></div>
         <div class="form-group"><label>Техосмотр до:</label><input type="text" id="addTa" placeholder="ДД.ММ.ГГГГ"></div>
         <div class="form-group"><label>Тахограф до:</label><input type="text" id="addTacho" placeholder="ДД.ММ.ГГГГ"></div>
@@ -184,14 +203,31 @@
         <div class="form-group"><label>Лицензия до:</label><input type="text" id="addLic" placeholder="ДД.ММ.ГГГГ"></div>
         <div class="modal-buttons">
             <button class="btn-cancel" onclick="closeAddModal()">Отмена</button>
-            <button class="btn" onclick="saveNewItem()">Сохранить в базу</button>
+            <button class="btn" onclick="saveNewItem()">Сохранить</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Загрузка базы данных из localStorage или использование точной базы с правильными датами CSDD (включая NN1048 на 28.07.2026)
-    let fleetData = JSON.parse(localStorage.getItem('fleetData')) || [
+    function checkPassword() {
+        const val = document.getElementById('passwordInput').value.trim();
+        if (val === 'tt13') {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+            sessionStorage.setItem('isLoggedIn', 'true');
+        } else {
+            document.getElementById('authError').style.display = 'block';
+        }
+    }
+
+    window.onload = function() {
+        if (sessionStorage.getItem('isLoggedIn') === 'true') {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+        }
+    };
+
+    const freshFleetData = [
         {"type": "truck", "num": "NN1048", "model": "VOLVO FH", "driver": "Vadim Kobenko", "reg": "30.05.2023", "ta": "28.07.2026", "vin": "YV2RTY0A8PA330579", "hitch": "V6059", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "07.01.2027", "tire": "Стандарт", "bat": "Ок", "pads": "Ок", "task": "Нет"},
         {"type": "truck", "num": "KI369", "model": "VOLVO FH", "driver": "Водитель не указан", "reg": "10.01.2020", "ta": "15.05.2024", "vin": "YV2RTY0A000001", "hitch": "B412F", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "17.01.2027", "tire": "Стандарт", "bat": "Ок", "pads": "Ок", "task": "Нет"},
         {"type": "truck", "num": "KI364", "model": "VOLVO FH", "driver": "Водитель не указан", "reg": "10.01.2020", "ta": "10.06.2024", "vin": "YV2RTY0A000002", "hitch": "B678G", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "17.01.2027", "tire": "Стандарт", "bat": "Ок", "pads": "Ок", "task": "Нет"},
@@ -221,7 +257,7 @@
         {"type": "trailer", "num": "A574R", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "18.01.2022", "ta": "30.07.2025", "vin": "WSM00000003381440", "hitch": "—", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
         {"type": "trailer", "num": "A779S", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "28.02.2022", "ta": "14.07.2026", "vin": "WSM00000003381443", "hitch": "NP6024", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
 
-        // Остальные исправные единицы (до 193 всего)
+        // Исправные единицы
         {"type": "truck", "num": "NJ3511", "model": "SCANIA R 450", "driver": "Jurij Vasiljonok", "reg": "23.01.2023", "ta": "26.01.2027", "vin": "YS2R4X200P5685137", "hitch": "B123H", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "23.01.2027", "tire": "Стандарт", "bat": "Ок", "pads": "Ок ~70%", "task": "Нет"},
         {"type": "truck", "num": "NJ3732", "model": "SCANIA R 450", "driver": "Vjaceslav Bogdanov", "reg": "16.02.2023", "ta": "11.02.2027", "vin": "YS2R4X200P2196515", "hitch": "B191K", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "20.01.2027", "tire": "Стандарт", "bat": "Ок", "pads": "Ок ~70%", "task": "Нет"},
         {"type": "truck", "num": "NK6573", "model": "MERCEDES BENZ ACTROS", "driver": "Boleslav Kindzulis", "reg": "14.02.2023", "ta": "17.03.2027", "vin": "W1T96340610663660", "hitch": "U6834", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "15.01.2027", "tire": "Стандарт", "bat": "Ок", "pads": "Ок ~70%", "task": "Нет"},
@@ -296,6 +332,7 @@
         {"type": "truck", "num": "ON1417", "model": "VOLVO FH", "driver": "Aleksandr Bondin", "reg": "29.06.2026", "ta": "29.06.2027", "vin": "YV2RTY0AON1417", "hitch": "V4986", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "08.01.2027", "tire": "Новая", "bat": "Новые", "pads": "95%", "task": "Нет"},
         {"type": "truck", "num": "ON1644", "model": "VOLVO FH", "driver": "Aleksandr Bodnarjuk", "reg": "22.07.2026", "ta": "22.07.2027", "vin": "YV2RTY0AON1644", "hitch": "B983J", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "29.01.2027", "tire": "Новая", "bat": "Новые", "pads": "95%", "task": "Нет"},
         {"type": "trailer", "num": "A363P", "model": "SCHMITZ SKO 24", "driver": "—", "reg": "10.08.2017", "ta": "28.08.2027", "vin": "WSM00000005182830", "hitch": "NK6876", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
+        {"type": "trailer", "num": "A475V", "model": "SCHMITZ SKO 24", "driver": "—", "reg": "26.04.2022", "ta": "26.08.2027", "vin": "WSM00000005291421", "hitch": "OP1925", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "30.11.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "70%", "task": "Нет"},
         {"type": "trailer", "num": "A672C", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "18.11.2020", "ta": "18.12.2027", "vin": "WSM00000003356255", "hitch": "OJ6187", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
         {"type": "trailer", "num": "A674C", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "16.11.2020", "ta": "06.04.2027", "vin": "WSM00000003356250", "hitch": "OI9370", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
         {"type": "trailer", "num": "A676C", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "16.11.2020", "ta": "08.04.2027", "vin": "WSM00000003356252", "hitch": "OI9375", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
@@ -375,11 +412,15 @@
         {"type": "trailer", "num": "Z3730", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "26.08.2019", "ta": "25.09.2026", "vin": "WSM00000003334669", "hitch": "—", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
         {"type": "trailer", "num": "Z3732", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "26.08.2019", "ta": "22.01.2027", "vin": "WSM00000003334670", "hitch": "OE3179", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
         {"type": "trailer", "num": "Z4785", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "05.11.2019", "ta": "27.01.2027", "vin": "WSM00000003342540", "hitch": "NJ7736", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
-        {"type": "trailer", "num": "Z5279", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "19.11.2019", "ta": "19.01.2027", "vin": "WSM00000003342543", "hitch": "NK7629", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
+        {"type": "trailer", "num": "Z5279", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "19.11.2019", "ta": "19.01.2027", "vin": "WSM00000003342543", "hitch": "NK7629", "history": ["Учет в Data CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
         {"type": "trailer", "num": "Z5280", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "19.11.2019", "ta": "15.09.2026", "vin": "WSM00000003342542", "hitch": "—", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
         {"type": "trailer", "num": "Z5331", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "19.11.2019", "ta": "08.04.2027", "vin": "WSM00000003342544", "hitch": "—", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
-        {"type": "trailer", "num": "В413F", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "23.01.2023", "ta": "26.07.2027", "vin": "WSM00000003411796", "hitch": "—", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"}
+        {"type": "trailer", "num": "В413F", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "23.01.2023", "ta": "26.07.2027", "vin": "WSM00000003411796", "hitch": "—", "history": ["Учет в CSDD"], "t-ach": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"}
     ];
+
+    // Всегда перезаписываем localStorage свежими данными
+    let fleetData = freshFleetData;
+    localStorage.setItem('fleetData', JSON.stringify(fleetData));
 
     document.getElementById('totalCount').innerText = fleetData.length;
     document.getElementById('truckCount').innerText = fleetData.filter(x => x.type === 'truck').length;
@@ -387,7 +428,7 @@
 
     let activeHitchIndex = null;
     let auditLog = JSON.parse(localStorage.getItem('auditLog')) || [
-        {time: "21.08.2026 09:14", text: "Синхронизировано с реальными датами CSDD (NN1048 просрочен 28.07.2026)"}
+        {time: "21.08.2026 11:55", text: "Синхронизировано с актуальными датами CSDD"}
     ];
 
     function logAction(actionText) {
@@ -431,12 +472,13 @@
         let okCount = 0;
         let expiredList = [];
         let warningList = [];
+        let okList = [];
 
         fleetData.forEach((item, idx) => {
             let issues = [];
             let warns = [];
             const taSt = checkDateStatus(item.ta);
-            const tachSt = checkDateStatus(item.tacho);
+            const tachSt = checkDateStatus(item.tacho || item.t-ach);
             const insSt = checkDateStatus(item.ins);
             const licSt = checkDateStatus(item.lic);
 
@@ -458,6 +500,7 @@
                 warningList.push({idx, num: item.num, model: item.model, issues: warns.join(", ")});
             } else {
                 okCount++;
+                okList.push({idx, num: item.num, model: item.model});
             }
         });
 
@@ -486,13 +529,32 @@
                 </div>
             `;
         });
+
+        const okBox = document.getElementById('okItemsContainer');
+        okBox.innerHTML = '';
+        okList.forEach(o => {
+            okBox.innerHTML += `
+                <div class="list-item" onclick="selectItem(${o.idx});">
+                    <span><b>${o.num}</b> (${o.model})</span>
+                    <span style="color: #137333; font-weight: bold;">В порядке</span>
+                </div>
+            `;
+        });
     }
 
     function toggleList(boxId) {
-        const box = document.getElementById(boxId);
-        if (boxId === 'expiredListBox') document.getElementById('warningListBox').style.display = 'none';
-        if (boxId === 'warningListBox') document.getElementById('expiredListBox').style.display = 'none';
-        box.style.display = (box.style.display === "block") ? "none" : "block";
+        const expBox = document.getElementById('expiredListBox');
+        const warnBox = document.getElementById('warningListBox');
+        const okBox = document.getElementById('okListBox');
+
+        expBox.style.display = 'none';
+        warnBox.style.display = 'none';
+        okBox.style.display = 'none';
+
+        const targetBox = document.getElementById(boxId);
+        if (targetBox) {
+            targetBox.style.display = (targetBox.style.display === "block") ? "none" : "block";
+        }
     }
 
     initAlerts();
@@ -754,7 +816,6 @@
         }
     }
 
-    // Раздельный поиск по тягачам и прицепам
     function onTruckSearchInput() {
         const query = document.getElementById("searchTruckInput").value.toUpperCase().trim();
         const box = document.getElementById("truckSuggestions");
@@ -813,6 +874,7 @@
         const item = fleetData[index];
         document.getElementById("expiredListBox").style.display = "none";
         document.getElementById("warningListBox").style.display = "none";
+        document.getElementById("okListBox").style.display = "none";
 
         const tbody = document.getElementById("tableBody");
         const emptyMsg = document.getElementById("emptyMessage");
@@ -891,9 +953,8 @@
 
     function toggleEdit(index) {
         const item = fleetData[index];
-        const btn = document.getElementById(`btn-edit-${index}`);
-        
-        if (btn.innerText.includes("Изменить")) {
+        const taEl = document.getElementById(`c-ta-${index}`);
+        if (!taEl.querySelector('input')) {
             document.getElementById(`c-ta-${index}`).innerHTML = `<input type="text" class="edit-input" id="in-ta-${index}" value="${item.ta}">`;
             document.getElementById(`c-tacho-${index}`).innerHTML = `<input type="text" class="edit-input" id="in-tacho-${index}" value="${item.tacho}">`;
             document.getElementById(`c-ins-${index}`).innerHTML = `<input type="text" class="edit-input" id="in-ins-${index}" value="${item.ins}">`;
@@ -903,8 +964,8 @@
             document.getElementById(`c-pads-${index}`).innerHTML = `<input type="text" class="edit-input" id="in-pads-${index}" value="${item.pads}">`;
             document.getElementById(`c-task-${index}`).innerHTML = `<input type="text" class="edit-input" id="in-task-${index}" value="${item.task}">`;
             
-            btn.innerText = "💾 Сохранить";
-            btn.style.background = "#34a853";
+            document.getElementById(`btn-edit-${index}`).innerText = "💾 Сохранить";
+            document.getElementById(`btn-edit-${index}`).style.background = "#34a853";
         } else {
             item.ta = document.getElementById(`in-ta-${index}`).value;
             item.tacho = document.getElementById(`in-tacho-${index}`).value;
@@ -918,8 +979,8 @@
             logAction(`Обновлены параметры единицы ${item.num}`);
             localStorage.setItem('fleetData', JSON.stringify(fleetData));
 
-            btn.innerText = "✏️ Изменить";
-            btn.style.background = "#ff9800";
+            document.getElementById(`btn-edit-${index}`).innerText = "✏️ Изменить";
+            document.getElementById(`btn-edit-${index}`).style.background = "#ff9800";
             selectItem(index);
             initAlerts();
         }
