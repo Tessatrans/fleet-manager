@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Office Fleet Manager - GitHub Gist</title>
+    <title>Office Fleet Manager - Google Sheets</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1400px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -32,11 +32,10 @@
     </style>
 
     <script>
-        const GIST_ID = "30f06ce466c15bac2e27e097268591c5";
-        const GIST_TOKEN = "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";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyaxilTtEpKo84927potVEUL0MJs2nZ6_Up8r2bmh1Ka9Uujrb4eNeDmublznM07IC6/exec";
 
         let fleetData = [];
-        let actionLog = [];
+        let actionLog = ["База данных успешно подключена через Google Таблицу"];
         let currentSelectedIndex = null;
 
         window.checkPassword = function() {
@@ -45,7 +44,7 @@
                 document.getElementById('authScreen').style.display = 'none';
                 document.getElementById('mainContainer').style.display = 'block';
                 sessionStorage.setItem('isLoggedIn', 'true');
-                loadDataFromGist();
+                loadDataFromSheets();
             } else {
                 document.getElementById('authError').style.display = 'block';
             }
@@ -55,54 +54,20 @@
             if (sessionStorage.getItem('isLoggedIn') === 'true') {
                 document.getElementById('authScreen').style.display = 'none';
                 document.getElementById('mainContainer').style.display = 'block';
-                loadDataFromGist();
+                loadDataFromSheets();
             }
         };
 
-        function loadDataFromGist() {
-            fetch(`https://api.github.com/gists/${GIST_ID}?t=` + new Date().getTime(), {
-                headers: { 'Authorization': `token ${GIST_TOKEN}` }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.files && data.files['fleet_db.json']) {
-                    const content = JSON.parse(data.files['fleet_db.json'].content);
-                    if (content && content.fleet) {
-                        fleetData = content.fleet;
-                        actionLog = content.actionLog || [];
+        function loadDataFromSheets() {
+            fetch(SCRIPT_URL + "?t=" + new Date().getTime())
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        fleetData = data;
                         processData();
                     }
-                }
-            })
-            .catch(err => console.log("Ошибка загрузки из Gist:", err));
-        }
-
-        window.saveDataToGist = function() {
-            fetch(`https://api.github.com/gists/${GIST_ID}`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `token ${GIST_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    files: {
-                        'fleet_db.json': {
-                            content: JSON.stringify({ fleet: fleetData, actionLog: actionLog }, null, 2)
-                        }
-                    }
                 })
-            })
-            .then(res => {
-                if (!res.ok) console.log("Ошибка сохранения в Gist");
-            })
-            .catch(err => console.log("Ошибка сети при сохранении:", err));
-        };
-
-        window.addLog = function(text) {
-            const timeStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            actionLog.unshift(`[${timeStr}] ${text}`);
-            if (actionLog.length > 40) actionLog.pop();
-            saveDataToGist();
+                .catch(err => console.log("Ошибка загрузки из Google Таблицы:", err));
         }
 
         function processData() {
@@ -188,80 +153,20 @@
             document.getElementById("tableBody").innerHTML = `
                 <tr>
                     <td><b>${item.num || item.номер}</b> (${item.model || ''})<br><small>VIN: ${item.vin || '—'}</small></td>
-                    <td>👤 ${item.driver || '—'} <button onclick="editField(${currentSelectedIndex}, 'driver', 'Водитель')">✏️</button></td>
+                    <td>👤 ${item.driver || '—'}</td>
                     <td>🔗 ${item.hitch || '—'}</td>
-                    <td><span class="${taStatus.cls}">${taStatus.text}</span> <button onclick="editField(${currentSelectedIndex}, 'ta', 'Техосмотр')">✏️</button></td>
-                    <td><span class="${tachoStatus.cls}">${tachoStatus.text}</span> <button onclick="editField(${currentSelectedIndex}, 'tacho', 'Тахограф')">✏️</button></td>
-                    <td><span class="${insStatus.cls}">${insStatus.text}</span> <button onclick="editField(${currentSelectedIndex}, 'ins', 'Страховка')">✏️</button></td>
-                    <td><span class="${licStatus.cls}">${licStatus.text}</span> <button onclick="editField(${currentSelectedIndex}, 'lic', 'Лицензия')">✏️</button></td>
-                    <td>${item.tire || '—'} <button onclick="editField(${currentSelectedIndex}, 'tire', 'Резина')">✏️</button></td>
-                    <td>${item.bat || '—'} <button onclick="editField(${currentSelectedIndex}, 'bat', 'Аккумуляторы')">✏️</button></td>
-                    <td>${item.pads || '—'} <button onclick="editField(${currentSelectedIndex}, 'pads', 'Колодки')">✏️</button></td>
-                    <td>${item.clutch || '—'} <button onclick="editField(${currentSelectedIndex}, 'clutch', 'Сцепление')">✏️</button></td>
-                    <td>${item.task || 'Нет'} <button onclick="editField(${currentSelectedIndex}, 'task', 'Ремонт')">✏️</button>${archiveHtml}</td>
-                    <td>
-                        <button class="btn-tbl btn-edit" onclick="editField(${currentSelectedIndex}, 'model', 'Модель')">Изменить</button>
-                        <button class="btn-tbl btn-del" onclick="deleteItem(${currentSelectedIndex})">Удалить</button>
-                    </td>
+                    <td><span class="${taStatus.cls}">${taStatus.text}</span></td>
+                    <td><span class="${tachoStatus.cls}">${tachoStatus.text}</span></td>
+                    <td><span class="${insStatus.cls}">${insStatus.text}</span></td>
+                    <td><span class="${licStatus.cls}">${licStatus.text}</span></td>
+                    <td>${item.tire || '—'}</td>
+                    <td>${item.bat || '—'}</td>
+                    <td>${item.pads || '—'}</td>
+                    <td>${item.clutch || '—'}</td>
+                    <td>${item.task || 'Нет'}${archiveHtml}</td>
+                    <td><small>Редактирование доступно в Google Таблице</small></td>
                 </tr>
             `;
-        };
-
-        window.editField = function(index, field, label) {
-            const cur = fleetData[index][field] || '';
-            const res = prompt(`Изменить поле "${label}":`, cur);
-            if (res !== null) {
-                fleetData[index][field] = res.trim();
-                addLog(`Изменено поле "${label}" у ${fleetData[index].num || fleetData[index].номер}`);
-                renderTable();
-                processData();
-            }
-        };
-
-        window.deleteItem = function(index) {
-            if (confirm("Точно удалить эту единицу из базы?")) {
-                const num = fleetData[index].num || fleetData[index].номер;
-                fleetData.splice(index, 1);
-                addLog(`Удалена единица ${num} из базы`);
-                currentSelectedIndex = null;
-                document.getElementById("fleetTable").style.display = "none";
-                document.getElementById("emptyMessage").style.display = "block";
-                document.getElementById('totalCount').innerText = fleetData.length;
-                processData();
-            }
-        };
-
-        window.addNewItem = function() {
-            const type = prompt("Тип ('truck' - тягач, 'trailer' - прицеп):", "truck");
-            if (!type) return;
-            const num = prompt("Введите госномер:", "AA0000");
-            if (!num) return;
-            const model = prompt("Модель:", "VOLVO FH");
-
-            const newItem = {
-                type: type.trim().toLowerCase(),
-                num: num.trim().toUpperCase(),
-                model: model ? model.trim() : "—",
-                driver: "Водитель не указан",
-                ta: "01.01.2027",
-                hitch: "—",
-                vin: "—",
-                tacho: "01.01.2027",
-                ins: "01.01.2027",
-                lic: "01.01.2027",
-                tire: "Стандарт",
-                bat: "Ок",
-                pads: "Ок",
-                clutch: "Ок",
-                task: "Нет",
-                repairHistory: []
-            };
-
-            fleetData.push(newItem);
-            addLog(`Добавлена новая единица ${newItem.num}`);
-            document.getElementById('totalCount').innerText = fleetData.length;
-            processData();
-            alert("Единица успешно добавлена и сохранена в облако!");
         };
     </script>
 </head>
@@ -278,7 +183,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h1>🚚 Управление автопарком (Всего в базе: <span id="totalCount">0</span> ед.)</h1>
             <div>
-                <button onclick="addNewItem()" style="background: #188038; color: #fff; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer;">+ Добавить единицу</button>
+                <a href="https://docs.google.com/spreadsheets/d/1tMraW4Dy1DMUkhejCj4o8CvQWF0nAW8ll1n7rfk9dpr0/edit" target="_blank" style="background: #188038; color: #fff; text-decoration: none; padding: 10px 15px; border-radius: 6px; font-size: 14px; display: inline-block;">📊 Открыть Google Таблицу</a>
             </div>
         </div>
 
@@ -314,7 +219,7 @@
         </table>
 
         <div class="log-box">
-            <b>📜 Общий лог действий и изменений в парке:</b>
+            <b>📜 Статус подключения:</b>
             <div id="actionLogContainer" style="margin-top: 10px;"></div>
         </div>
     </div>
