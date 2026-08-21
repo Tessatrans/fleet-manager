@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Office Fleet Manager - Firebase Realtime</title>
+    <title>Office Fleet Manager - GitHub Repo DB</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1400px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -22,7 +22,6 @@
         .status-ok { color: #188038; }
         .btn-tbl { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; color: #fff; margin-right: 5px; }
         .btn-edit { background: #1a73e8; }
-        .btn-archive { background: #f29900; }
         .btn-del { background: #d93025; }
         .log-box { margin-top: 30px; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #eee; max-height: 200px; overflow-y: auto; }
         .log-item { font-size: 13px; color: #666; margin-bottom: 5px; border-bottom: 1px solid #f0f0f0; padding-bottom: 3px; }
@@ -32,32 +31,10 @@
         .auth-btn { width: 100%; padding: 10px; background: #1a73e8; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
     </style>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDNDpYOnptuNoYAtXNfS0byXJE4u39zycw",
-            authDomain: "teessatrans-fleet.firebaseapp.com",
-            projectId: "teessatrans-fleet",
-            storageBucket: "teessatrans-fleet.firebasestorage.app",
-            messagingSenderId: "517400275173",
-            appId: "1:517400275173:web:5de5eee95771f96a858c0c",
-            measurementId: "G-Z1ZWYVM0SN",
-            databaseURL: "https://teessatrans-fleet-default-rtdb.firebaseio.com"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        window.db = db;
-        window.ref = ref;
-        window.set = set;
-
+    <script>
         let fleetData = [];
         let actionLog = [];
         let currentSelectedIndex = null;
-        let editingHitchIndex = null;
 
         window.checkPassword = function() {
             const pass = document.getElementById('passwordInput').value.trim();
@@ -80,39 +57,17 @@
         };
 
         function loadData() {
-            const fleetRef = ref(db, 'fleetData');
-            const logRef = ref(db, 'actionLog');
-
-            onValue(fleetRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    fleetData = data;
-                    processData();
-                    if (currentSelectedIndex !== null) renderTable();
-                }
-            });
-
-            onValue(logRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    actionLog = data;
-                    renderLog();
-                }
-            });
-        }
-
-        window.saveDataToFirebase = function() {
-            const fleetRef = ref(db, 'fleetData');
-            const logRef = ref(db, 'actionLog');
-            set(fleetRef, fleetData);
-            set(logRef, actionLog);
-        };
-
-        function addLog(text) {
-            const timeStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            actionLog.unshift(`[${timeStr}] ${text}`);
-            if (actionLog.length > 40) actionLog.pop();
-            saveDataToFirebase();
+            // Добавляем случайный параметр ?t=..., чтобы браузер не тянул старый файл из кэша
+            fetch('fleet_db.json?t=' + new Date().getTime())
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.fleet) {
+                        fleetData = data.fleet;
+                        actionLog = data.actionLog || [];
+                        processData();
+                    }
+                })
+                .catch(err => console.log("Ошибка загрузки базы:", err));
         }
 
         function processData() {
@@ -222,9 +177,13 @@
             const res = prompt(`Изменить поле "${label}":`, cur);
             if (res !== null) {
                 fleetData[index][field] = res.trim();
-                addLog(`Изменено поле "${label}" у ${fleetData[index].num || fleetData[index].номер}`);
-                saveDataToFirebase();
+                const timeStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                actionLog.unshift(`[${timeStr}] Изменено поле "${label}" у ${fleetData[index].num || fleetData[index].номер}`);
+                if (actionLog.length > 40) actionLog.pop();
+                
                 renderTable();
+                processData();
+                alert("Изменение сохранено в памяти сессии. Чтобы оно зафиксировалось для всех, нажмите 'Скачать базу' и обновите файл на GitHub.");
             }
         };
 
@@ -232,60 +191,27 @@
             if (confirm("Точно удалить эту единицу из базы?")) {
                 const num = fleetData[index].num || fleetData[index].номер;
                 fleetData.splice(index, 1);
-                addLog(`Удалена единица ${num} из базы`);
-                saveDataToFirebase();
                 currentSelectedIndex = null;
                 document.getElementById("fleetTable").style.display = "none";
                 document.getElementById("emptyMessage").style.display = "block";
                 document.getElementById('totalCount').innerText = fleetData.length;
+                processData();
+                alert("Единица удалена. Нажмите 'Скачать базу' для обновления файла на GitHub.");
             }
         };
 
-        window.addNewItem = function() {
-            const type = prompt("Тип ('truck' - тягач, 'trailer' - прицеп):", "truck");
-            if (!type) return;
-            const num = prompt("Введите госномер:", "AA0000");
-            if (!num) return;
-            const model = prompt("Модель:", "VOLVO FH");
-
-            const newItem = {
-                type: type.trim().toLowerCase(),
-                num: num.trim().toUpperCase(),
-                model: model ? model.trim() : "—",
-                driver: "Водитель не указан",
-                ta: "01.01.2027",
-                hitch: "—",
-                vin: "—",
-                tacho: "01.01.2027",
-                ins: "01.01.2027",
-                lic: "01.01.2027",
-                tire: "Стандарт",
-                bat: "Ок",
-                pads: "Ок",
-                clutch: "Ок",
-                task: "Нет",
-                repairHistory: []
-            };
-
-            fleetData.push(newItem);
-            addLog(`Добавлена новая единица ${newItem.num}`);
-            saveDataToFirebase();
-            document.getElementById('totalCount').innerText = fleetData.length;
-            alert("Единица успешно добавлена!");
-        };
-
         window.exportData = function() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fleetData, null, 2));
+            const fullData = { fleet: fleetData, actionLog: actionLog };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullData, null, 2));
             const dlAnchorElem = document.createElement('a');
             dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", "fleet_backup.json");
+            dlAnchorElem.setAttribute("download", "fleet_db.json");
             dlAnchorElem.click();
         };
     </script>
 </head>
 <body>
 
-    <!-- Окно авторизации -->
     <div id="authScreen">
         <h2>🔒 Вход в систему</h2>
         <input type="password" id="passwordInput" class="auth-input" placeholder="Введите пароль">
@@ -293,13 +219,11 @@
         <p id="authError" style="color: red; display: none; margin-top: 10px;">Неверный пароль!</p>
     </div>
 
-    <!-- Основной интерфейс -->
     <div id="mainContainer" class="container">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h1>🚚 Управление автопарком (Всего в базе: <span id="totalCount">0</span> ед.)</h1>
             <div>
-                <button onclick="addNewItem()" style="background: #188038; color: #fff; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer;">+ Добавить единицу</button>
-                <button onclick="exportData()" style="background: #1a73e8; color: #fff; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; margin-left: 10px;">Скачать базу</button>
+                <button onclick="exportData()" style="background: #1a73e8; color: #fff; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer;">💾 Скачать обновленный файл базы</button>
             </div>
         </div>
 
