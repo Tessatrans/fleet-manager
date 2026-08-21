@@ -4,6 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Office Fleet Manager - Firebase Realtime</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1400px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { font-size: 24px; color: #1a73e8; margin-bottom: 20px; }
+        .stats-row { display: flex; gap: 15px; margin-bottom: 20px; }
+        .stat-card { flex: 1; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; color: #fff; }
+        .bg-red { background: #d93025; }
+        .bg-orange { background: #f29900; }
+        .bg-green { background: #188038; }
+        .search-box { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 20px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #e0e0e0; padding: 10px; text-align: left; font-size: 14px; }
+        th { background: #f8f9fa; color: #555; }
+        .status-expired { color: #d93025; font-weight: bold; }
+        .status-warning { color: #f29900; font-weight: bold; }
+        .status-ok { color: #188038; }
+        .btn-tbl { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; color: #fff; margin-right: 5px; }
+        .btn-edit { background: #1a73e8; }
+        .btn-archive { background: #f29900; }
+        .btn-del { background: #d93025; }
+        .log-box { margin-top: 30px; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #eee; max-height: 200px; overflow-y: auto; }
+        .log-item { font-size: 13px; color: #666; margin-bottom: 5px; border-bottom: 1px solid #f0f0f0; padding-bottom: 3px; }
+        #authScreen { max-width: 400px; margin: 100px auto; padding: 30px; background: #fff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        #mainContainer { display: none; }
+        .auth-input { width: 100%; padding: 10px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box; }
+        .auth-btn { width: 100%; padding: 10px; background: #1a73e8; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+    </style>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -51,6 +79,7 @@
             }
         };
 
+        // Подключаем живую синхронизацию Firebase для машин и лога
         function initFirebaseSync() {
             const fleetRef = ref(db, 'fleetData');
             const logRef = ref(db, 'actionLog');
@@ -80,8 +109,8 @@
         window.saveDataToFirebase = function() {
             const fleetRef = ref(db, 'fleetData');
             const logRef = ref(db, 'actionLog');
-            set(fleetRef, fleetData).catch(err => console.log("Ошибка сохранения машин: " + err.message));
-            set(logRef, actionLog).catch(err => console.log("Ошибка сохранения лога: " + err.message));
+            set(fleetRef, fleetData);
+            set(logRef, actionLog);
         };
 
         window.addLog = function(text) {
@@ -93,9 +122,7 @@
 
         function processData() {
             const totalEl = document.getElementById('totalCount');
-            const emptyEl = document.getElementById('emptyMessage');
             if (totalEl) totalEl.innerText = fleetData.length;
-            if (emptyEl) emptyEl.innerText = 'Используйте поисковую строку выше для поиска...';
             initAlerts();
             renderLog();
         }
@@ -122,63 +149,38 @@
 
         function initAlerts() {
             let exp = 0, warn = 0, ok = 0;
-            let expList = [], warnList = [], okList = [];
-
-            fleetData.forEach((item, idx) => {
+            fleetData.forEach((item) => {
                 const ta = checkDateStatus(item.ta || item.ТЕХОСМОТР);
-                if (ta.status === 'expired') { exp++; expList.push({idx, item}); }
-                else if (ta.status === 'warning') { warn++; warnList.push({idx, item}); }
-                else { ok++; okList.push({idx, item}); }
+                if (ta.status === 'expired') exp++;
+                else if (ta.status === 'warning') warn++;
+                else ok++;
             });
 
-            const expCount = document.getElementById('countExpired');
-            const warnCount = document.getElementById('countWarning');
-            const okCount = document.getElementById('countOk');
-
-            if (expCount) expCount.innerText = `${exp} ед.`;
-            if (warnCount) warnCount.innerText = `${warn} ед.`;
-            if (okCount) okCount.innerText = `${ok} ед.`;
-
-            fillList('expiredItemsContainer', expList, '#c5221f');
-            fillList('warningItemsContainer', warnList, '#b06000');
-            fillList('okItemsContainer', okList, '#137333');
+            if (document.getElementById('countExpired')) document.getElementById('countExpired').innerText = `${exp} ед.`;
+            if (document.getElementById('countWarning')) document.getElementById('countWarning').innerText = `${warn} ед.`;
+            if (document.getElementById('countOk')) document.getElementById('countOk').innerText = `${ok} ед.`;
         }
 
-        function fillList(elementId, list, color) {
-            const box = document.getElementById(elementId);
-            if (!box) return;
-            box.innerHTML = '';
-            list.forEach(el => {
-                box.innerHTML += `
-                    <div class="list-item" onclick="selectItem(${el.idx})">
-                        <span><b>${el.item.num || el.item.номер}</b> (${el.item.model || el.item.модель || ''})</span>
-                        <span style="color: ${color}; font-weight: bold;">${el.item.ta || '—'}</span>
-                    </div>
-                `;
-            });
-        }
+        window.filterTable = function() {
+            const q = document.getElementById('searchInput').value.toUpperCase().trim();
+            if (!q) {
+                document.getElementById('fleetTable').style.display = 'none';
+                document.getElementById('emptyMessage').innerText = 'Используйте поисковую строку выше для поиска...';
+                document.getElementById('emptyMessage').style.display = 'block';
+                return;
+            }
 
-        window.toggleList = function(id) {
-            ['expiredListBox', 'warningListBox', 'okListBox'].forEach(boxId => {
-                const b = document.getElementById(boxId);
-                if (b) {
-                    if (boxId !== id) b.style.display = 'none';
-                    else b.style.display = (b.style.display === 'block') ? 'none' : 'block';
-                }
-            });
-        };
-
-        window.selectItem = function(index) {
-            currentSelectedIndex = index;
-            ['expiredListBox', 'warningListBox', 'okListBox'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = 'none';
-            });
-            
-            document.getElementById("emptyMessage").style.display = "none";
-            document.getElementById("fleetTable").style.display = "table";
-
-            renderTable();
+            const foundIndex = fleetData.findIndex(el => (el.num && el.num.toUpperCase().includes(q)) || (el.driver && el.driver.toUpperCase().includes(q)));
+            if (foundIndex !== -1) {
+                currentSelectedIndex = foundIndex;
+                document.getElementById('emptyMessage').style.display = 'none';
+                document.getElementById('fleetTable').style.display = 'table';
+                renderTable();
+            } else {
+                document.getElementById('fleetTable').style.display = 'none';
+                document.getElementById('emptyMessage').innerText = 'Ничего не найдено';
+                document.getElementById('emptyMessage').style.display = 'block';
+            }
         };
 
         window.renderTable = function() {
@@ -193,29 +195,25 @@
 
             let archiveHtml = '';
             if (item.repairHistory && item.repairHistory.length > 0) {
-                archiveHtml = `<div class="archive-box"><b>Архив ремонтов:</b><br>` + item.repairHistory.join('<br>') + `</div>`;
+                archiveHtml = `<div style="font-size:11px; color:#555; margin-top:5px;"><b>Архив:</b><br>` + item.repairHistory.join('<br>') + `</div>`;
             }
 
             document.getElementById("tableBody").innerHTML = `
                 <tr>
-                    <td><b>${item.num}</b> (${item.model})<br><div class="csdd-info">VIN: ${item.vin || '—'}</div></td>
-                    <td><span class="driver-badge" onclick="editField(${currentSelectedIndex}, 'driver', 'Водитель')">👤 ${item.driver || '—'} ✏️</span></td>
-                    <td><span class="hitch-badge" onclick="openHitchModal(${currentSelectedIndex})">🔗 ${item.hitch || item.сцепка || '—'} ✏️</span></td>
-                    <td><span class="${taStatus.cls}">${taStatus.text}</span> <span class="edit-icon" onclick="editField(${currentSelectedIndex}, 'ta', 'Техосмотр')">✏️</span></td>
-                    <td><span class="${tachoStatus.cls}">${tachoStatus.text}</span> <span class="edit-icon" onclick="editField(${currentSelectedIndex}, 'tacho', 'Тахограф')">✏️</span></td>
-                    <td><span class="${insStatus.cls}">${insStatus.text}</span> <span class="edit-icon" onclick="editField(${currentSelectedIndex}, 'ins', 'Страховка')">✏️</span></td>
-                    <td><span class="${licStatus.cls}">${licStatus.text}</span> <span class="edit-icon" onclick="editField(${currentSelectedIndex}, 'lic', 'Лицензия')">✏️</span></td>
-                    <td onclick="editField(${currentSelectedIndex}, 'tire', 'Резина')" style="cursor:pointer;">${item.tire || '—'} ✏️</td>
-                    <td onclick="editField(${currentSelectedIndex}, 'bat', 'Аккумуляторы')" style="cursor:pointer;">${item.bat || '—'} ✏️</td>
-                    <td onclick="editField(${currentSelectedIndex}, 'pads', 'Колодки')" style="cursor:pointer;">${item.pads || '—'} ✏️</td>
-                    <td onclick="editField(${currentSelectedIndex}, 'clutch', 'Сцепление')" style="cursor:pointer;">${item.clutch || '—'} ✏️</td>
-                    <td>
-                        ${item.task || 'Нет'} <span class="edit-icon" onclick="editField(${currentSelectedIndex}, 'task', 'Ремонт')">✏️</span>
-                        ${archiveHtml}
-                    </td>
+                    <td><b>${item.num || item.номер}</b> (${item.model || ''})<br><small>VIN: ${item.vin || '—'}</small></td>
+                    <td>👤 ${item.driver || '—'} <button onclick="editField(${currentSelectedIndex}, 'driver', 'Водитель')">✏️</button></td>
+                    <td>🔗 ${item.hitch || '—'}</td>
+                    <td><span class="${taStatus.cls}">${taStatus.text}</span> <button onclick="editField(${currentSelectedIndex}, 'ta', 'Техосмотр')">✏️</button></td>
+                    <td><span class="${tachoStatus.cls}">${tachoStatus.text}</span> <button onclick="editField(${currentSelectedIndex}, 'tacho', 'Тахограф')">✏️</button></td>
+                    <td><span class="${insStatus.cls}">${insStatus.text}</span> <button onclick="editField(${currentSelectedIndex}, 'ins', 'Страховка')">✏️</button></td>
+                    <td><span class="${licStatus.cls}">${licStatus.text}</span> <button onclick="editField(${currentSelectedIndex}, 'lic', 'Лицензия')">✏️</button></td>
+                    <td>${item.tire || '—'} <button onclick="editField(${currentSelectedIndex}, 'tire', 'Резина')">✏️</button></td>
+                    <td>${item.bat || '—'} <button onclick="editField(${currentSelectedIndex}, 'bat', 'Аккумуляторы')">✏️</button></td>
+                    <td>${item.pads || '—'} <button onclick="editField(${currentSelectedIndex}, 'pads', 'Колодки')">✏️</button></td>
+                    <td>${item.clutch || '—'} <button onclick="editField(${currentSelectedIndex}, 'clutch', 'Сцепление')">✏️</button></td>
+                    <td>${item.task || 'Нет'} <button onclick="editField(${currentSelectedIndex}, 'task', 'Ремонт')">✏️</button>${archiveHtml}</td>
                     <td>
                         <button class="btn-tbl btn-edit" onclick="editField(${currentSelectedIndex}, 'model', 'Модель')">Изменить</button>
-                        <button class="btn-tbl btn-archive" onclick="moveToArchive(${currentSelectedIndex})">Архив</button>
                         <button class="btn-tbl btn-del" onclick="deleteItem(${currentSelectedIndex})">Удалить</button>
                     </td>
                 </tr>
@@ -227,124 +225,7 @@
             const res = prompt(`Изменить поле "${label}":`, cur);
             if (res !== null) {
                 fleetData[index][field] = res.trim();
-                addLog(`Изменено поле "${label}" у ${fleetData[index].num}`);
-                saveDataToFirebase();
-                renderTable();
-            }
-        };
-
-        window.openHitchModal = function(index) {
-            editingHitchIndex = index;
-            const item = fleetData[index];
-            document.getElementById('modalInfo').innerText = `Единица: ${item.num} (${item.model}). Текущая сцепка: ${item.hitch || '—'}`;
-            document.getElementById('hitchInput').value = item.hitch === '—' ? '' : item.hitch;
-            document.getElementById('modalSuggestions').style.display = 'none';
-            document.getElementById('hitchModal').style.display = 'flex';
-        };
-
-        window.closeHitchModal = function() {
-            document.getElementById('hitchModal').style.display = 'none';
-            document.getElementById('modalSuggestions').style.display = 'none';
-            editingHitchIndex = null;
-        };
-
-        window.setHitchValue = function(val) {
-            document.getElementById('hitchInput').value = val;
-            document.getElementById('modalSuggestions').style.display = 'none';
-            saveHitchModal();
-        };
-
-        window.onModalSearchInput = function() {
-            const q = document.getElementById('hitchInput').value.toUpperCase().trim();
-            const box = document.getElementById('modalSuggestions');
-            box.innerHTML = '';
-            if (!q) { box.style.display = 'none'; return; }
-
-            let matches = [];
-            fleetData.forEach(el => {
-                if (el.num.toUpperCase().includes(q)) {
-                    matches.push(el);
-                }
-            });
-
-            if (matches.length > 0) {
-                matches.slice(0, 10).forEach(el => {
-                    box.innerHTML += `<div class="modal-suggestion-item" onclick="selectModalSuggestion('${el.num}')"><b>${el.num}</b> — ${el.model} (${el.driver || '—'})</div>`;
-                });
-                box.style.display = 'block';
-            } else {
-                box.style.display = 'none';
-            }
-        };
-
-        window.selectModalSuggestion = function(num) {
-            document.getElementById('hitchInput').value = num;
-            document.getElementById('modalSuggestions').style.display = 'none';
-        };
-
-        window.saveHitchModal = function() {
-            if (editingHitchIndex === null) return;
-            const targetTruck = fleetData[editingHitchIndex];
-            const inputVal = document.getElementById('hitchInput').value.toUpperCase().trim();
-            const newHitchNum = inputVal === '' ? '—' : inputVal;
-            const oldHitchNum = targetTruck.hitch || '—';
-
-            if (newHitchNum === oldHitchNum) {
-                closeHitchModal();
-                return;
-            }
-
-            let inheritedTrailer = null;
-            if (newHitchNum !== '—') {
-                const foundObj = fleetData.find(el => el.num.toUpperCase() === newHitchNum);
-                if (foundObj && foundObj.hitch && foundObj.hitch !== '—') {
-                    inheritedTrailer = foundObj.hitch;
-                }
-            }
-
-            if (oldHitchNum !== '—') {
-                fleetData.forEach(el => {
-                    if (el.num.toUpperCase() === oldHitchNum.toUpperCase()) {
-                        if (el.hitch === targetTruck.num) el.hitch = '—';
-                    }
-                });
-            }
-
-            targetTruck.hitch = newHitchNum;
-
-            if (inheritedTrailer) {
-                targetTruck.hitch = inheritedTrailer;
-                fleetData.forEach(el => {
-                    if (el.num.toUpperCase() === inheritedTrailer.toUpperCase()) {
-                        el.hitch = targetTruck.num;
-                    }
-                });
-                addLog(`Зеркальный обмен: ${targetTruck.num} забрал прицеп ${inheritedTrailer} от ${newHitchNum}`);
-            } else if (newHitchNum !== '—') {
-                fleetData.forEach(el => {
-                    if (el.num.toUpperCase() === newHitchNum.toUpperCase()) {
-                        el.hitch = targetTruck.num;
-                    }
-                });
-                addLog(`Зеркальная сцепка между ${targetTruck.num} и ${newHitchNum}`);
-            } else {
-                addLog(`Отцеплен прицеп от ${targetTruck.num}`);
-            }
-
-            saveDataToFirebase();
-            renderTable();
-            closeHitchModal();
-            alert(`Успех! Сцепка обновлена.`);
-        };
-
-        window.moveToArchive = function(index) {
-            const item = fleetData[index];
-            const note = prompt("Заметка для архива ремонтов:", item.task || "Ремонт выполнен");
-            if (note !== null) {
-                if (!item.repairHistory) item.repairHistory = [];
-                item.repairHistory.unshift(`[${new Date().toLocaleDateString()}] ${note.trim()}`);
-                item.task = "Нет";
-                addLog(`Ремонт по ${item.num} перенесен в архив`);
+                addLog(`Изменено поле "${label}" у ${fleetData[index].num || fleetData[index].номер}`);
                 saveDataToFirebase();
                 renderTable();
             }
@@ -352,7 +233,7 @@
 
         window.deleteItem = function(index) {
             if (confirm("Точно удалить эту единицу из базы?")) {
-                const num = fleetData[index].num;
+                const num = fleetData[index].num || fleetData[index].номер;
                 fleetData.splice(index, 1);
                 addLog(`Удалена единица ${num} из базы`);
                 saveDataToFirebase();
@@ -395,9 +276,72 @@
             document.getElementById('totalCount').innerText = fleetData.length;
             alert("Единица успешно добавлена!");
         };
+
+        window.exportData = function() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fleetData, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "fleet_backup.json");
+            dlAnchorElem.click();
+        };
     </script>
 </head>
 <body>
-    <!-- Твой HTML интерфейс -->
+
+    <!-- Окно авторизации -->
+    <div id="authScreen">
+        <h2>🔒 Вход в систему</h2>
+        <input type="password" id="passwordInput" class="auth-input" placeholder="Введите пароль">
+        <button class="auth-btn" onclick="checkPassword()">Войти</button>
+        <p id="authError" style="color: red; display: none; margin-top: 10px;">Неверный пароль!</p>
+    </div>
+
+    <!-- Основной интерфейс -->
+    <div id="mainContainer" class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>🚚 Управление автопарком (Всего в базе: <span id="totalCount">0</span> ед.)</h1>
+            <div>
+                <button onclick="addNewItem()" style="background: #188038; color: #fff; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer;">+ Добавить единицу</button>
+                <button onclick="exportData()" style="background: #1a73e8; color: #fff; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; margin-left: 10px;">Скачать базу</button>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card bg-red">Просроченные документы: <span id="countExpired">0 ед.</span></div>
+            <div class="stat-card bg-orange">Истекают в течение 30 дней: <span id="countWarning">0 ед.</span></div>
+            <div class="stat-card bg-green">В полном порядке: <span id="countOk">0 ед.</span></div>
+        </div>
+
+        <input type="text" id="searchInput" class="search-box" placeholder="Введите госномер или водителя для поиска..." oninput="filterTable()">
+
+        <div id="emptyMessage" style="text-align: center; padding: 40px; color: #777;">Используйте поисковую строку выше для поиска...</div>
+
+        <table id="fleetTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Госномер / Модель</th>
+                    <th>Водитель</th>
+                    <th>Сцепка</th>
+                    <th>Техосмотр</th>
+                    <th>Тахограф</th>
+                    <th>Страховка</th>
+                    <th>Лицензия</th>
+                    <th>Резина</th>
+                    <th>АКБ</th>
+                    <th>Колодки</th>
+                    <th>Сцепление</th>
+                    <th>Ремонт</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+
+        <div class="log-box">
+            <b>📜 Общий лог действий и изменений в парке:</b>
+            <div id="actionLogContainer" style="margin-top: 10px;"></div>
+        </div>
+    </div>
+
 </body>
 </html>
