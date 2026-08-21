@@ -38,7 +38,7 @@ window.db = db;
                 document.getElementById('authScreen').style.display = 'none';
                 document.getElementById('mainContainer').style.display = 'block';
                 sessionStorage.setItem('isLoggedIn', 'true');
-                initFirebaseSync();
+                loadData();
             } else {
                 document.getElementById('authError').style.display = 'block';
             }
@@ -48,52 +48,37 @@ window.db = db;
             if (sessionStorage.getItem('isLoggedIn') === 'true') {
                 document.getElementById('authScreen').style.display = 'none';
                 document.getElementById('mainContainer').style.display = 'block';
-                initFirebaseSync();
+                loadData();
             }
         };
 
-      function initFirebaseSync() {
-    const fleetRef = ref(db, 'fleetData');
-    const logRef = ref(db, 'actionLog');
-    
-    // Принудительно отправляем данные в базу при первом запуске
-    set(fleetRef, fleetData);
-    set(logRef, actionLog);
-
-    // Слушаем изменения от других пользователей
-    onValue(fleetRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            fleetData = data;
-            processData();
-            if (currentSelectedIndex !== null) renderTable();
-        } else {
-            fleetData = [];
-            processData();
+      function loadData() {
+            fetch('https://api.npoint.io/8a255478faedb3cff6dc')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.fleet) {
+                        fleetData = data.fleet;
+                        actionLog = data.log || [];
+                        processData();
+                        renderLog();
+                    }
+                })
+                .catch(err => console.log("Ошибка загрузки"));
         }
-    });
 
-    onValue(logRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            actionLog = data;
-            renderLog();
+        function saveData() {
+            fetch('https://api.npoint.io/8a255478faedb3cff6dc', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fleet: fleetData, log: actionLog })
+            });
         }
-    });
+
+
+
+     function saveDataToFirebase() {
+    saveData();
 }
-
-       function saveDataToFirebase() {
-            const fleetRef = ref(db, 'fleetData');
-            const logRef = ref(db, 'actionLog');
-            
-            // Принудительно сохраняем и машины, и историю в облако Firebase
-            set(fleetRef, fleetData);
-            set(logRef, actionLog);
-            
-            initAlerts();
-            renderLog();
-        }
-
         function addLog(text) {
             const timeStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             actionLog.unshift(`[${timeStr}] ${text}`);
