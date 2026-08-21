@@ -8,19 +8,24 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDNDpYOnptuNoYAtXNFs0byXJE4u39zycw",
-            authDomain: "teessatrans-fleet.firebaseapp.com",
-            projectId: "teessatrans-fleet",
-            storageBucket: "teessatrans-fleet.firebasestorage.app",
-            messagingSenderId: "517400275173",
-            appId: "1:517400275173:web:5de5eee95771f96a858c0c",
-            measurementId: "G-Z1ZWYVM0SN"
-        };
+      const firebaseConfig = {
+    apiKey: "AIzaSyDNDpYOnptuNoYAtXNfS0byXJE4u39zycw",
+    authDomain: "teessatrans-fleet.firebaseapp.com",
+    projectId: "teessatrans-fleet",
+    storageBucket: "teessatrans-fleet.firebasestorage.app",
+    messagingSenderId: "517400275173",
+    appId: "1:517400275173:web:5de5eee95771f96a858c0c",
+    measurementId: "G-Z1ZWYVM0SN",
+    databaseURL: "https://teessatrans-fleet-default-rtdb.firebaseio.com"
+};
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const CLOUD_URL = 'https://api.npoint.io/8a255478faedb3cff6dc';
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Делаем функции доступными для базы
+window.ref = ref;
+window.set = set;
+window.db = db;
 
         let fleetData = [];
         let actionLog = [];
