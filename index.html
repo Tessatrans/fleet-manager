@@ -43,12 +43,13 @@
         .hitch-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #e8f0fe; color: #1a73e8; cursor: pointer; border: 1px dashed #1a73e8; }
         .driver-badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 11px; background: #e6f4ea; color: #137333; font-weight: bold; cursor: pointer; }
         .csdd-info { font-size: 10px; color: #555; margin-top: 2px; }
-        .btn { background: #1a73e8; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; }
         .empty-msg { text-align: center; color: #888; padding: 40px; font-size: 15px; }
 
         .status-ok { background-color: #e6f4ea; color: #137333; padding: 3px 6px; border-radius: 4px; font-weight: bold; display: inline-block; }
         .status-warning { background-color: #fef7e0; color: #b06000; padding: 3px 6px; border-radius: 4px; font-weight: bold; display: inline-block; }
         .status-expired { background-color: #fce8e6; color: #c5221f; padding: 3px 6px; border-radius: 4px; font-weight: bold; display: inline-block; }
+        
+        .cloud-status { font-size: 11px; color: #137333; font-weight: normal; float: right; }
     </style>
 </head>
 <body>
@@ -66,6 +67,7 @@
 <div class="container" id="mainContainer">
     <h2>
         🚚 Управление автопарком (Всего в базе: <span id="totalCount">0</span> единиц)
+        <span id="cloudStatus" class="cloud-status">☁️ Облако подключено</span>
     </h2>
 
     <div class="dashboard-summary">
@@ -123,6 +125,8 @@
 
 <script>
     let fleetData = [];
+    let currentSelectedIndex = null;
+    const BIN_URL = 'https://api.npoint.io/8a255478faedb3cff6dc';
 
     function checkPassword() {
         if (document.getElementById('passwordInput').value.trim() === 'tt13') {
@@ -144,7 +148,7 @@
     };
 
     function loadCloudData() {
-        fetch('https://api.npoint.io/8a255478faedb3cff6dc')
+        fetch(BIN_URL)
             .then(response => response.json())
             .then(data => {
                 fleetData = data;
@@ -155,6 +159,28 @@
             .catch(err => {
                 document.getElementById('emptyMessage').innerText = 'Ошибка загрузки данных из облака!';
             });
+    }
+
+    function saveCloudData() {
+        const statusEl = document.getElementById('cloudStatus');
+        statusEl.innerText = '💾 Сохранение в облако...';
+        
+        fetch(BIN_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(fleetData)
+        })
+        .then(response => {
+            if (response.ok) {
+                statusEl.innerText = '☁️ Изменения сохранены!';
+                setTimeout(() => { statusEl.innerText = '☁️ Облако подключено'; }, 3000);
+            } else {
+                statusEl.innerText = '⚠️ Ошибка сохранения';
+            }
+        })
+        .catch(err => {
+            statusEl.innerText = '⚠️ Нет связи с облаком';
+        });
     }
 
     function checkDateStatus(dateStr) {
@@ -212,11 +238,19 @@
     }
 
     function selectItem(index) {
+        currentSelectedIndex = index;
         const item = fleetData[index];
         ['expiredListBox', 'warningListBox', 'okListBox'].forEach(id => document.getElementById(id).style.display = 'none');
         
         document.getElementById("emptyMessage").style.display = "none";
         document.getElementById("fleetTable").style.display = "table";
+
+        renderTable();
+    }
+
+    function renderTable() {
+        if (currentSelectedIndex === null) return;
+        const item = fleetData[currentSelectedIndex];
 
         const taStatus = checkDateStatus(item.ta);
         const tachoStatus = checkDateStatus(item.tacho);
@@ -226,8 +260,8 @@
         document.getElementById("tableBody").innerHTML = `
             <tr>
                 <td><b>${item.num}</b> (${item.model})<br><div class="csdd-info">VIN: ${item.vin || '—'}</div></td>
-                <td><span class="driver-badge">👤 ${item.driver || '—'}</span></td>
-                <td><span class="hitch-badge">🔗 ${item.hitch || item.сцепка || '—'}</span></td>
+                <td><span class="driver-badge" onclick="editDriver(${currentSelectedIndex})">👤 ${item.driver || '—'} ✏️</span></td>
+                <td><span class="hitch-badge" onclick="editHitch(${currentSelectedIndex})">🔗 ${item.hitch || item.сцепка || '—'} ✏️</span></td>
                 <td><span class="${taStatus.cls}">${taStatus.text}</span></td>
                 <td><span class="${tachoStatus.cls}">${tachoStatus.text}</span></td>
                 <td><span class="${insStatus.cls}">${insStatus.text}</span></td>
@@ -238,6 +272,26 @@
                 <td>${item.task || '—'}</td>
             </tr>
         `;
+    }
+
+    function editDriver(index) {
+        const currentDriver = fleetData[index].driver || '';
+        const newDriver = prompt("Введите имя нового водителя:", currentDriver);
+        if (newDriver !== null) {
+            fleetData[index].driver = newDriver.trim() || "Водитель не указан";
+            renderTable();
+            saveCloudData();
+        }
+    }
+
+    function editHitch(index) {
+        const currentHitch = fleetData[index].hitch || fleetData[index].сцепка || '';
+        const newHitch = prompt("Введите номер сцепки/прицепа:", currentHitch);
+        if (newHitch !== null) {
+            fleetData[index].hitch = newHitch.trim() || "—";
+            renderTable();
+            saveCloudData();
+        }
     }
 
     function onTruckSearchInput() {
