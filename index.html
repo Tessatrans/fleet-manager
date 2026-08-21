@@ -22,7 +22,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Глобальные переменные для доступа из других функций
         window.db = db;
         window.ref = ref;
         window.set = set;
@@ -52,27 +51,28 @@
             }
         };
 
-        // Подключаем реальное время Firebase
         function initFirebaseSync() {
             const fleetRef = ref(db, 'fleetData');
             const logRef = ref(db, 'actionLog');
 
-            // Принудительно слушаем и обновляем fleetData из Firebase
             onValue(fleetRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
                     fleetData = data;
                     processData();
                     if (currentSelectedIndex !== null) renderTable();
+                } else {
+                    set(fleetRef, fleetData);
                 }
             });
 
-            // Принудительно слушаем и обновляем ОБЩИЙ лог из Firebase
             onValue(logRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
                     actionLog = data;
-                    renderLog(); // Сразу перерисовываем лог на экране
+                    renderLog();
+                } else {
+                    set(logRef, actionLog);
                 }
             });
         }
@@ -80,8 +80,8 @@
         window.saveDataToFirebase = function() {
             const fleetRef = ref(db, 'fleetData');
             const logRef = ref(db, 'actionLog');
-            set(fleetRef, fleetData);
-            set(logRef, actionLog);
+            set(fleetRef, fleetData).catch(err => console.log("Ошибка сохранения машин: " + err.message));
+            set(logRef, actionLog).catch(err => console.log("Ошибка сохранения лога: " + err.message));
         };
 
         window.addLog = function(text) {
@@ -398,6 +398,6 @@
     </script>
 </head>
 <body>
-    <!-- Здесь продолжается твой HTML-интерфейс -->
+    <!-- Твой HTML интерфейс -->
 </body>
 </html>
