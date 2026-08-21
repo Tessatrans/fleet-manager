@@ -82,11 +82,14 @@
             });
         }
 
-        function saveDataToFirebase() {
+       function saveDataToFirebase() {
             const fleetRef = ref(db, 'fleetData');
             const logRef = ref(db, 'actionLog');
+            
+            // Принудительно сохраняем и машины, и историю в облако Firebase
             set(fleetRef, fleetData);
             set(logRef, actionLog);
+            
             initAlerts();
             renderLog();
         }
