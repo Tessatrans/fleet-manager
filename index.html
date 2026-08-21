@@ -65,7 +65,7 @@
                 document.getElementById('authScreen').style.display = 'none';
                 document.getElementById('mainContainer').style.display = 'block';
                 sessionStorage.setItem('isLoggedIn', 'true');
-                initFirebaseSync();
+                loadData();
             } else {
                 document.getElementById('authError').style.display = 'block';
             }
@@ -75,12 +75,11 @@
             if (sessionStorage.getItem('isLoggedIn') === 'true') {
                 document.getElementById('authScreen').style.display = 'none';
                 document.getElementById('mainContainer').style.display = 'block';
-                initFirebaseSync();
+                loadData();
             }
         };
 
-        // Подключаем живую синхронизацию Firebase для машин и лога
-        function initFirebaseSync() {
+        function loadData() {
             const fleetRef = ref(db, 'fleetData');
             const logRef = ref(db, 'actionLog');
 
@@ -90,8 +89,6 @@
                     fleetData = data;
                     processData();
                     if (currentSelectedIndex !== null) renderTable();
-                } else {
-                    set(fleetRef, fleetData);
                 }
             });
 
@@ -100,8 +97,6 @@
                 if (data) {
                     actionLog = data;
                     renderLog();
-                } else {
-                    set(logRef, actionLog);
                 }
             });
         }
@@ -113,16 +108,18 @@
             set(logRef, actionLog);
         };
 
-        window.addLog = function(text) {
+        function addLog(text) {
             const timeStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             actionLog.unshift(`[${timeStr}] ${text}`);
             if (actionLog.length > 40) actionLog.pop();
             saveDataToFirebase();
-        };
+        }
 
         function processData() {
             const totalEl = document.getElementById('totalCount');
             if (totalEl) totalEl.innerText = fleetData.length;
+            const emptyEl = document.getElementById('emptyMessage');
+            if (emptyEl) emptyEl.innerText = 'Используйте поисковую строку выше для поиска...';
             initAlerts();
             renderLog();
         }
