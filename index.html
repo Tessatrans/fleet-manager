@@ -47,11 +47,11 @@
             }
         };
 
-        function initFirebaseSync() {
+       function initFirebaseSync() {
             const fleetRef = ref(db, 'fleetData');
             const logRef = ref(db, 'actionLog');
 
-            // Слушаем изменения базы данных в реальном времени
+            // Работаем ТОЛЬКО с облаком Firebase. Никаких сторонних сайтов!
             onValue(fleetRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
@@ -59,16 +59,19 @@
                     processData();
                     if (currentSelectedIndex !== null) renderTable();
                 } else {
-                    // Если база пустая, грузим дефолтный npoint и записываем в Firebase
-                    fetch(CLOUD_URL)
-                        .then(res => res.jsoninitial ? res.json() : res.json())
-                        .then(initialData => {
-                            fleetData = initialData;
-                            set(fleetRef, fleetData);
-                            processData();
-                        });
+                    fleetData = [];
+                    processData();
                 }
             });
+
+            onValue(logRef, (snapshot) => {
+                const logData = snapshot.val();
+                if (logData) {
+                    actionLog = logData;
+                    renderLog();
+                }
+            });
+        }
 
             onValue(logRef, (snapshot) => {
                 const logData = snapshot.val();
