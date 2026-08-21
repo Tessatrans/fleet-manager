@@ -256,8 +256,6 @@
         {"type": "trailer", "num": "B122H", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "21.03.2023", "ta": "22.07.2026", "vin": "WSM00000003418752", "hitch": "NN6136", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
         {"type": "trailer", "num": "A574R", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "18.01.2022", "ta": "30.07.2025", "vin": "WSM00000003381440", "hitch": "—", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
         {"type": "trailer", "num": "A779S", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "28.02.2022", "ta": "14.07.2026", "vin": "WSM00000003381443", "hitch": "NP6024", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
-
-        // Исправные единицы
         {"type": "truck", "num": "NJ3511", "model": "SCANIA R 450", "driver": "Jurij Vasiljonok", "reg": "23.01.2023", "ta": "26.01.2027", "vin": "YS2R4X200P5685137", "hitch": "B123H", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "23.01.2027", "tire": "Стандарт", "bat": "Ок", "pads": "Ок ~70%", "task": "Нет"},
         {"type": "truck", "num": "NJ3732", "model": "SCANIA R 450", "driver": "Vjaceslav Bogdanov", "reg": "16.02.2023", "ta": "11.02.2027", "vin": "YS2R4X200P2196515", "hitch": "B191K", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "20.01.2027", "tire": "Стандарт", "bat": "Ок", "pads": "Ок ~70%", "task": "Нет"},
         {"type": "truck", "num": "NK6573", "model": "MERCEDES BENZ ACTROS", "driver": "Boleslav Kindzulis", "reg": "14.02.2023", "ta": "17.03.2027", "vin": "W1T96340610663660", "hitch": "U6834", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "15.01.2027", "tire": "Стандарт", "bat": "Ок", "pads": "Ок ~70%", "task": "Нет"},
@@ -415,12 +413,12 @@
         {"type": "trailer", "num": "Z5279", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "19.11.2019", "ta": "19.01.2027", "vin": "WSM00000003342543", "hitch": "NK7629", "history": ["Учет в Data CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
         {"type": "trailer", "num": "Z5280", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "19.11.2019", "ta": "15.09.2026", "vin": "WSM00000003342542", "hitch": "—", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
         {"type": "trailer", "num": "Z5331", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "19.11.2019", "ta": "08.04.2027", "vin": "WSM00000003342544", "hitch": "—", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"},
-        {"type": "trailer", "num": "В413F", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "23.01.2023", "ta": "26.07.2027", "vin": "WSM00000003411796", "hitch": "—", "history": ["Учет в CSDD"], "t-ach": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"}
+        {"type": "trailer", "num": "В413F", "model": "SCHMITZ SCS 24", "driver": "—", "reg": "23.01.2023", "ta": "26.07.2027", "vin": "WSM00000003411796", "hitch": "—", "history": ["Учет в CSDD"], "tacho": "15.10.2026", "ins": "12.12.2026", "lic": "21.01.2027", "tire": "Стандарт", "bat": "—", "pads": "80%", "task": "Нет"}
     ];
 
-    // Всегда перезаписываем localStorage свежими данными
+    // Принудительно перезаписываем localStorage на 100% полную базу
+    localStorage.setItem('fleetData', JSON.stringify(freshFleetData));
     let fleetData = freshFleetData;
-    localStorage.setItem('fleetData', JSON.stringify(fleetData));
 
     document.getElementById('totalCount').innerText = fleetData.length;
     document.getElementById('truckCount').innerText = fleetData.filter(x => x.type === 'truck').length;
@@ -428,7 +426,7 @@
 
     let activeHitchIndex = null;
     let auditLog = JSON.parse(localStorage.getItem('auditLog')) || [
-        {time: "21.08.2026 11:55", text: "Синхронизировано с актуальными датами CSDD"}
+        {time: "21.08.2026 12:30", text: "Система активирована с полной базой CSDD"}
     ];
 
     function logAction(actionText) {
