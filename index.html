@@ -57,23 +57,22 @@
             const fleetRef = ref(db, 'fleetData');
             const logRef = ref(db, 'actionLog');
 
+            // Принудительно слушаем и обновляем fleetData из Firebase
             onValue(fleetRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
                     fleetData = data;
                     processData();
                     if (currentSelectedIndex !== null) renderTable();
-                } else {
-                    // Если база пустая, заливаем дефолтные данные
-                    set(fleetRef, fleetData);
                 }
             });
 
+            // Принудительно слушаем и обновляем ОБЩИЙ лог из Firebase
             onValue(logRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
                     actionLog = data;
-                    renderLog();
+                    renderLog(); // Сразу перерисовываем лог на экране
                 }
             });
         }
