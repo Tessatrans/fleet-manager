@@ -52,40 +52,35 @@ window.db = db;
             }
         };
 
-       function initFirebaseSync() {
-            const fleetRef = ref(db, 'fleetData');
-            const logRef = ref(db, 'actionLog');
+      function initFirebaseSync() {
+    const fleetRef = ref(db, 'fleetData');
+    const logRef = ref(db, 'actionLog');
+    
+    // Принудительно отправляем данные в базу при первом запуске
+    set(fleetRef, fleetData);
+    set(logRef, actionLog);
 
-            // Работаем ТОЛЬКО с облаком Firebase. Никаких сторонних сайтов!
-            onValue(fleetRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    fleetData = data;
-                    processData();
-                    if (currentSelectedIndex !== null) renderTable();
-                } else {
-                    fleetData = [];
-                    processData();
-                }
-            });
-
-            onValue(logRef, (snapshot) => {
-                const logData = snapshot.val();
-                if (logData) {
-                    actionLog = logData;
-                    renderLog();
-                }
-            });
+    // Слушаем изменения от других пользователей
+    onValue(fleetRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            fleetData = data;
+            processData();
+            if (currentSelectedIndex !== null) renderTable();
+        } else {
+            fleetData = [];
+            processData();
         }
+    });
 
-            onValue(logRef, (snapshot) => {
-                const logData = snapshot.val();
-                if (logData) {
-                    actionLog = logData;
-                    renderLog();
-                }
-            });
+    onValue(logRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            actionLog = data;
+            renderLog();
         }
+    });
+}
 
        function saveDataToFirebase() {
             const fleetRef = ref(db, 'fleetData');
