@@ -1,0 +1,26 @@
+{
+  "fleet": [
+    {
+      "type": "truck",
+      "num": "NN1048",
+      "model": "VOLVO FH",
+      "vin": "YV2RTY0A8PA330579",
+      "reg": "30.05.2023",
+      "ta": "28.07.2026",
+      "tacho": "15.10.2026",
+      "ins": "12.12.2026",
+      "lic": "07.01.2027",
+      "driver": "Vadim Kobenko",
+      "hitch": "V6059",
+      "tire": "Стандарт",
+      "bat": "Ок",
+      "pads": "Ок",
+      "clutch": "Ок",
+      "task": "Нет",
+      "repairHistory": ["Учет в CSDD"]
+    }
+  ],
+  "actionLog": [
+    "База данных успешно перенесена в репозиторий GitHub"
+  ]
+}
