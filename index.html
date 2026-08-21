@@ -8,24 +8,24 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-      const firebaseConfig = {
-    apiKey: "AIzaSyDNDpYOnptuNoYAtXNfS0byXJE4u39zycw",
-    authDomain: "teessatrans-fleet.firebaseapp.com",
-    projectId: "teessatrans-fleet",
-    storageBucket: "teessatrans-fleet.firebasestorage.app",
-    messagingSenderId: "517400275173",
-    appId: "1:517400275173:web:5de5eee95771f96a858c0c",
-    measurementId: "G-Z1ZWYVM0SN",
-    databaseURL: "https://teessatrans-fleet-default-rtdb.firebaseio.com"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNDpYOnptuNoYAtXNfS0byXJE4u39zycw",
+            authDomain: "teessatrans-fleet.firebaseapp.com",
+            projectId: "teessatrans-fleet",
+            storageBucket: "teessatrans-fleet.firebasestorage.app",
+            messagingSenderId: "517400275173",
+            appId: "1:517400275173:web:5de5eee95771f96a858c0c",
+            measurementId: "G-Z1ZWYVM0SN",
+            databaseURL: "https://teessatrans-fleet-default-rtdb.firebaseio.com"
+        };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-// Делаем функции доступными для базы
-window.ref = ref;
-window.set = set;
-window.db = db;
+        // Глобальные переменные для доступа из других функций
+        window.db = db;
+        window.ref = ref;
+        window.set = set;
 
         let fleetData = [];
         let actionLog = [];
@@ -38,7 +38,7 @@ window.db = db;
                 document.getElementById('authScreen').style.display = 'none';
                 document.getElementById('mainContainer').style.display = 'block';
                 sessionStorage.setItem('isLoggedIn', 'true');
-                loadData();
+                initFirebaseSync();
             } else {
                 document.getElementById('authError').style.display = 'block';
             }
@@ -48,57 +48,65 @@ window.db = db;
             if (sessionStorage.getItem('isLoggedIn') === 'true') {
                 document.getElementById('authScreen').style.display = 'none';
                 document.getElementById('mainContainer').style.display = 'block';
-                loadData();
+                initFirebaseSync();
             }
         };
 
-      function loadData() {
-            fetch('https://api.npoint.io/8a255478faedb3cff6dc')
-                .then(res => res.json())
-                .then(data => {
-                    if (data && data.fleet) {
-                        fleetData = data.fleet;
-                        actionLog = data.log || [];
-                        processData();
-                        renderLog();
-                    }
-                })
-                .catch(err => console.log("Ошибка загрузки"));
-        }
+        // Подключаем реальное время Firebase
+        function initFirebaseSync() {
+            const fleetRef = ref(db, 'fleetData');
+            const logRef = ref(db, 'actionLog');
 
-        function saveData() {
-            fetch('https://api.npoint.io/8a255478faedb3cff6dc', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fleet: fleetData, log: actionLog })
+            onValue(fleetRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    fleetData = data;
+                    processData();
+                    if (currentSelectedIndex !== null) renderTable();
+                } else {
+                    // Если база пустая, заливаем дефолтные данные
+                    set(fleetRef, fleetData);
+                }
+            });
+
+            onValue(logRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    actionLog = data;
+                    renderLog();
+                }
             });
         }
 
+        window.saveDataToFirebase = function() {
+            const fleetRef = ref(db, 'fleetData');
+            const logRef = ref(db, 'actionLog');
+            set(fleetRef, fleetData);
+            set(logRef, actionLog);
+        };
 
-
-     function saveDataToFirebase() {
-    saveData();
-}
-        function addLog(text) {
+        window.addLog = function(text) {
             const timeStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             actionLog.unshift(`[${timeStr}] ${text}`);
             if (actionLog.length > 40) actionLog.pop();
             saveDataToFirebase();
-        }
+        };
 
         function processData() {
-            document.getElementById('totalCount').innerText = fleetData.length;
-            document.getElementById('emptyMessage').innerText = 'Используйте поисковую строку выше для поиска...';
+            const totalEl = document.getElementById('totalCount');
+            const emptyEl = document.getElementById('emptyMessage');
+            if (totalEl) totalEl.innerText = fleetData.length;
+            if (emptyEl) emptyEl.innerText = 'Используйте поисковую строку выше для поиска...';
             initAlerts();
             renderLog();
         }
 
-        function renderLog() {
+        window.renderLog = function() {
             const container = document.getElementById('actionLogContainer');
             if (container) {
                 container.innerHTML = actionLog.map(log => `<div class="log-item">${log}</div>`).join('');
             }
-        }
+        };
 
         function checkDateStatus(dateStr) {
             if (!dateStr || dateStr === "—") return {cls: "", text: "—", status: "ok"};
@@ -124,9 +132,13 @@ window.db = db;
                 else { ok++; okList.push({idx, item}); }
             });
 
-            document.getElementById('countExpired').innerText = `${exp} ед.`;
-            document.getElementById('countWarning').innerText = `${warn} ед.`;
-            document.getElementById('countOk').innerText = `${ok} ед.`;
+            const expCount = document.getElementById('countExpired');
+            const warnCount = document.getElementById('countWarning');
+            const okCount = document.getElementById('countOk');
+
+            if (expCount) expCount.innerText = `${exp} ед.`;
+            if (warnCount) warnCount.innerText = `${warn} ед.`;
+            if (okCount) okCount.innerText = `${ok} ед.`;
 
             fillList('expiredItemsContainer', expList, '#c5221f');
             fillList('warningItemsContainer', warnList, '#b06000');
@@ -135,6 +147,7 @@ window.db = db;
 
         function fillList(elementId, list, color) {
             const box = document.getElementById(elementId);
+            if (!box) return;
             box.innerHTML = '';
             list.forEach(el => {
                 box.innerHTML += `
@@ -149,14 +162,19 @@ window.db = db;
         window.toggleList = function(id) {
             ['expiredListBox', 'warningListBox', 'okListBox'].forEach(boxId => {
                 const b = document.getElementById(boxId);
-                if (boxId !== id) b.style.display = 'none';
-                else b.style.display = (b.style.display === 'block') ? 'none' : 'block';
+                if (b) {
+                    if (boxId !== id) b.style.display = 'none';
+                    else b.style.display = (b.style.display === 'block') ? 'none' : 'block';
+                }
             });
         };
 
         window.selectItem = function(index) {
             currentSelectedIndex = index;
-            ['expiredListBox', 'warningListBox', 'okListBox'].forEach(id => document.getElementById(id).style.display = 'none');
+            ['expiredListBox', 'warningListBox', 'okListBox'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
             
             document.getElementById("emptyMessage").style.display = "none";
             document.getElementById("fleetTable").style.display = "table";
@@ -164,9 +182,10 @@ window.db = db;
             renderTable();
         };
 
-        function renderTable() {
+        window.renderTable = function() {
             if (currentSelectedIndex === null) return;
             const item = fleetData[currentSelectedIndex];
+            if (!item) return;
 
             const taStatus = checkDateStatus(item.ta);
             const tachoStatus = checkDateStatus(item.tacho);
@@ -202,7 +221,7 @@ window.db = db;
                     </td>
                 </tr>
             `;
-        }
+        };
 
         window.editField = function(index, field, label) {
             const cur = fleetData[index][field] || '';
@@ -377,7 +396,9 @@ window.db = db;
             document.getElementById('totalCount').innerText = fleetData.length;
             alert("Единица успешно добавлена!");
         };
-
-        window.exportData = function() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fleetData, null, 2));
-            const dl
+    </script>
+</head>
+<body>
+    <!-- Здесь продолжается твой HTML-интерфейс -->
+</body>
+</html>
