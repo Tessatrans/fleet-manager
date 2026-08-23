@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Office Fleet Manager - Full Cloud</title>
+    <title>Office Fleet Manager - Teessatrans Cloud</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1850px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: none; }
@@ -74,22 +74,22 @@
         .modal-suggestion-item:hover { background: #e8f0fe; color: #1a73e8; }
     </style>
 
-    <!-- Подключаем Firebase SDK -->
+    <!-- Подключаем Firebase SDK с твоим личным проектом Teessatrans-Fleet -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyAJ4ykJTV8CcB-HpluK6fmPNhG0jegI7_4",
-            authDomain: "gmp-demo-project-871467764.firebaseapp.com",
-            projectId: "gmp-demo-project-871467764",
-            storageBucket: "gmp-demo-project-871467764.firebasestorage.app",
-            messagingSenderId: "1083767995536",
-            appId: "1:1083767995536:web:14b4e02ebeed35b2c4ac15"
+            apiKey: "AIzaSyDNPpYQrptuNo7ATKnFs0yKJE4u39Zyxms",
+            authDomain: "teessatrans-fleet.firebaseapp.com",
+            projectId: "teessatrans-fleet",
+            storageBucket: "teessatrans-fleet.firebasestorage.app",
+            messagingSenderId: "517400275173",
+            appId: "1:517400275173:web:0de5eee9577f9fa353cbc"
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app, "ai-studio-fleetmanager-245471da-6146-4754-bb2a-104e36cc9502");
+        const db = getFirestore(app);
 
         window.syncWithFirebase = async function() {
             try {
