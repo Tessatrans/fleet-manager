@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Office Fleet Manager - Teessatrans Cloud</title>
+    <title>Office Fleet Manager - Firebase Firestore</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1850px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: none; }
@@ -74,10 +74,10 @@
         .modal-suggestion-item:hover { background: #e8f0fe; color: #1a73e8; }
     </style>
 
-    <!-- Подключаем Firebase SDK с твоим личным проектом Teessatrans-Fleet -->
+    <!-- Подключаем Firebase SDK и настраиваем загрузку из Firestore -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDNPpYQrptuNo7ATKnFs0yKJE4u39Zyxms",
@@ -90,6 +90,36 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        window.loadCloudFleet = async function() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "fleet"));
+                let cloudData = [];
+                querySnapshot.forEach((document) => {
+                    cloudData.push(document.data());
+                });
+
+                if (cloudData.length > 0) {
+                    fleetData = cloudData;
+                    addLog("Данные успешно загружены из облака Firebase Firestore!");
+                } else {
+                    addLog("Облако пустое, инициализируем начальными данными...");
+                    // Если в облаке пусто, берем стартовый массив и сохраняем в Firestore
+                    fleetData = embeddedFleet;
+                    for (let item of fleetData) {
+                        const docId = (item.num || item.номер || "car").toString().replace(/[\/\\#,+()$~%.'":*?<>{}]/g, "_");
+                        await setDoc(doc(db, "fleet", docId), item);
+                    }
+                    addLog("Начальные данные успешно записаны в облако!");
+                }
+                processData();
+            } catch (err) {
+                console.error("Ошибка загрузки из Firestore:", err);
+                addLog("Ошибка облака, работаем на локальной копии");
+                fleetData = embeddedFleet;
+                processData();
+            }
+        };
 
         window.syncWithFirebase = async function() {
             try {
@@ -388,10 +418,51 @@
       { "ta": "26.07.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "В413F", "reg": "23.01.2023", "vin": "WSM00000003411796", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] }
     ];
 
-    let fleetData = embeddedFleet;
-    let actionLog = ["Система инициализирована"];
+    // Настоящая логика AI Studio: загрузка из Firestore, а если пусто — заливка массива
+    let fleetData = [];
+    let actionLog = ["Инициализация системы..."];
     let currentSelectedIndex = null;
     let editingHitchIndex = null;
+
+    async function initSystem() {
+        try {
+            const querySnapshot = await getDocs(collection(db, "fleet"));
+            let cloudList = [];
+            querySnapshot.forEach((doc) => {
+                cloudList.push(doc.data());
+            });
+
+            if (cloudList.length > 0) {
+                fleetData = cloudList;
+                addLog("Данные загружены из облака Firebase");
+            } else {
+                addLog("Облако пустое, переносим базу...");
+                fleetData = embeddedFleet;
+                for (let item of fleetData) {
+                    const docId = (item.num || item.номер || "car").toString().replace(/[\/\\#,+()$~%.'":*?<>{}]/g, "_");
+                    await setDoc(doc(db, "fleet", docId), item);
+                }
+                addLog("База успешно перенесена в Firebase!");
+            }
+            processData();
+        } catch (err) {
+            console.error("Firestore error:", err);
+            addLog("Ошибка облака, используем локальную копию");
+            fleetData = embeddedFleet;
+            processData();
+        }
+    }
+
+    async function saveToCloud() {
+        try {
+            for (let item of fleetData) {
+                const docId = (item.num || item.номер || "car").toString().replace(/[\/\\#,+()$~%.'":*?<>{}]/g, "_");
+                await setDoc(doc(db, "fleet", docId), item);
+            }
+        } catch (err) {
+            console.error("Save error:", err);
+        }
+    }
 
     function checkPassword() {
         const pass = document.getElementById('passwordInput').value.trim();
@@ -399,7 +470,7 @@
             document.getElementById('authScreen').style.display = 'none';
             document.getElementById('mainContainer').style.display = 'block';
             sessionStorage.setItem('isLoggedIn', 'true');
-            processData();
+            initSystem();
         } else {
             document.getElementById('authError').style.display = 'block';
         }
@@ -409,7 +480,7 @@
         if (sessionStorage.getItem('isLoggedIn') === 'true') {
             document.getElementById('authScreen').style.display = 'none';
             document.getElementById('mainContainer').style.display = 'block';
-            processData();
+            initSystem();
         }
     };
 
@@ -423,7 +494,7 @@
         localStorage.setItem('fleetMasterDataPro', JSON.stringify(fleetData));
         initAlerts();
         renderLog();
-        if (window.syncWithFirebase) window.syncWithFirebase();
+        saveToCloud();
     }
 
     function addLog(text) {
