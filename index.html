@@ -158,7 +158,7 @@
     <table id="fleetTable">
         <thead>
             <tr>
-                <th>Госномер / Модель / Год / VIN</th>
+                <th>Госномер / Модель / Дата / VIN</th>
                 <th>👤 Водитель</th>
                 <th>🔗 Сцепка (Прицеп / Тягач)</th>
                 <th>Техосмотр</th>
@@ -388,58 +388,11 @@
       { "ta": "26.07.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "В413F", "reg": "23.01.2023", "vin": "WSM00000003411796", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] }
     ];
 
-    let fleetData = [];
-    let actionLog = ["Инициализация системы..."];
+    // ГАРАНТИРОВАННОЕ СОХРАНЕНИЕ: Читаем из памяти браузера, если там пусто — берем базу
+    let fleetData = JSON.parse(localStorage.getItem('fleetMasterDataPro')) || embeddedFleet;
+    let actionLog = JSON.parse(localStorage.getItem('fleetLog')) || ["Система инициализирована"];
     let currentSelectedIndex = null;
     let editingHitchIndex = null;
-
-    // Функция извлечения года из поля регистрации (например, "30.05.2023" -> "2023")
-    function getYearFromReg(regStr) {
-        if (!regStr) return '—';
-        const parts = regStr.split('.');
-        if (parts.length === 3) return parts[2];
-        return regStr;
-    }
-
-    async function initSystem() {
-        try {
-            const querySnapshot = await getDocs(collection(db, "fleet"));
-            let cloudList = [];
-            querySnapshot.forEach((doc) => {
-                cloudList.push(doc.data());
-            });
-
-            if (cloudList.length > 0) {
-                fleetData = cloudList;
-                addLog("Данные загружены из демо-облака AI Studio");
-            } else {
-                addLog("Облако пустое, инициализируем базу...");
-                fleetData = embeddedFleet;
-                for (let item of fleetData) {
-                    const docId = (item.num || "car").toString().replace(/[\/\\#,+()$~%.'":*?<>{}]/g, "_");
-                    await setDoc(doc(db, "fleet", docId), item);
-                }
-                addLog("База успешно загружена в облако!");
-            }
-            processData();
-        } catch (err) {
-            console.error("Firestore error:", err);
-            addLog("Ошибка облака, загрузка локальной копии");
-            fleetData = embeddedFleet;
-            processData();
-        }
-    }
-
-    async function saveToCloud() {
-        try {
-            for (let item of fleetData) {
-                const docId = (item.num || "car").toString().replace(/[\/\\#,+()$~%.'":*?<>{}]/g, "_");
-                await setDoc(doc(db, "fleet", docId), item);
-            }
-        } catch (err) {
-            console.error("Save error:", err);
-        }
-    }
 
     function checkPassword() {
         const pass = document.getElementById('passwordInput').value.trim();
@@ -447,7 +400,7 @@
             document.getElementById('authScreen').style.display = 'none';
             document.getElementById('mainContainer').style.display = 'block';
             sessionStorage.setItem('isLoggedIn', 'true');
-            initSystem();
+            processData();
         } else {
             document.getElementById('authError').style.display = 'block';
         }
@@ -457,7 +410,7 @@
         if (sessionStorage.getItem('isLoggedIn') === 'true') {
             document.getElementById('authScreen').style.display = 'none';
             document.getElementById('mainContainer').style.display = 'block';
-            initSystem();
+            processData();
         }
     };
 
@@ -469,16 +422,17 @@
 
     function saveLocal() {
         localStorage.setItem('fleetMasterDataPro', JSON.stringify(fleetData));
+        localStorage.setItem('fleetLog', JSON.stringify(actionLog));
         initAlerts();
         renderLog();
-        saveToCloud();
+        if (window.syncWithFirebase) window.syncWithFirebase();
     }
 
     function addLog(text) {
         const timeStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         actionLog.unshift(`[${timeStr}] ${text}`);
         if (actionLog.length > 30) actionLog.pop();
-        renderLog();
+        saveLocal();
     }
 
     function renderLog() {
@@ -565,7 +519,7 @@
         const tachoStatus = checkDateStatus(item.tacho);
         const insStatus = checkDateStatus(item.ins);
         const licStatus = checkDateStatus(item.lic);
-        const carYear = getYearFromReg(item.reg);
+        const fullRegDate = item.reg || '—'; // Полная дата регистрации из CSDD
 
         let archiveHtml = '';
         if (item.history && item.history.length > 0) {
@@ -574,7 +528,7 @@
 
         document.getElementById("tableBody").innerHTML = `
             <tr>
-                <td><b>${item.num}</b> (${item.model} — <b>${carYear} г.</b>)<br><div class="csdd-info">VIN: ${item.vin || '—'}</div></td>
+                <td><b>${item.num}</b> (${item.model} — <b>${fullRegDate}</b>)<br><div class="csdd-info">VIN: ${item.vin || '—'}</div></td>
                 <td><span class="driver-badge" onclick="editField(${currentSelectedIndex}, 'driver', 'Водитель')">👤 ${item.driver || '—'} ✏️</span></td>
                 <td><span class="hitch-badge" onclick="openHitchModal(${currentSelectedIndex})">🔗 ${item.hitch || '—'} ✏️</span></td>
                 <td><span class="${taStatus.cls}">${taStatus.text}</span> <span class="edit-icon" onclick="editField(${currentSelectedIndex}, 'ta', 'Техосмотр')">✏️</span></td>
