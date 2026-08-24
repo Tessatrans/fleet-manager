@@ -3,23 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Office Fleet Manager - Full Local & Cloud Pro</title>
+    <title>Office Fleet Manager - Full Online Firestore Pro</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1850px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: none; }
         
-        #authScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a73e8; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .auth-card { background: #fff; padding: 30px; border-radius: 10px; width: 350px; box-shadow: 0 5px 25px rgba(0,0,0,0.2); text-align: center; }
-        .auth-card h3 { margin-top: 0; color: #1a73e8; }
-        .auth-card input { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; margin-bottom: 15px; text-align: center; }
-        .auth-card button { width: 100%; background: #1a73e8; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .auth-error { color: #c5221f; font-size: 12px; margin-bottom: 10px; display: none; }
+        #authScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1877F2; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .auth-card { background: #fff; padding: 30px; border-radius: 16px; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); text-align: center; }
+        .auth-card h3 { margin-top: 0; color: #1877F2; font-size: 20px; }
+        .auth-card input { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 15px; text-align: center; }
+        .auth-card button { width: 100%; background: #1877F2; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .auth-card button:hover { background: #166fe5; }
+        .auth-error { color: #c5221f; font-size: 13px; margin-bottom: 10px; display: none; font-weight: 500; }
 
-        h2 { margin-top: 0; color: #1a73e8; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        h2 { margin-top: 0; color: #1877F2; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         
-        .top-actions { display: flex; gap: 10px; }
-        .btn-action { background: #1a73e8; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .top-actions { display: flex; gap: 10px; align-items: center; }
+        .btn-action { background: #1877F2; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
         .btn-success { background: #137333; }
+        .sync-badge { font-size: 11px; padding: 4px 8px; border-radius: 4px; background: #e6f4ea; color: #137333; font-weight: bold; border: 1px solid #b7e1cd; }
 
         .dashboard-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .summary-card { background: #f8f9fa; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; font-size: 13px; cursor: pointer; }
@@ -37,15 +39,15 @@
 
         .suggestions { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #ddd; border-radius: 0 0 8px 8px; max-height: 220px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: none; }
         .suggestion-item { padding: 9px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
-        .suggestion-item:hover { background: #e8f0fe; color: #1a73e8; }
+        .suggestion-item:hover { background: #e8f0fe; color: #1877F2; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; display: none; }
         th, td { border: 1px solid #e0e0e0; padding: 7px; text-align: left; vertical-align: top; }
         th { background: #f8f9fa; color: #444; font-weight: bold; }
         
-        .hitch-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #e8f0fe; color: #1a73e8; cursor: pointer; border: 1px dashed #1a73e8; }
+        .hitch-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #e8f0fe; color: #1877F2; cursor: pointer; border: 1px dashed #1877F2; }
         .driver-badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 11px; background: #e6f4ea; color: #137333; font-weight: bold; cursor: pointer; }
-        .edit-icon { font-size: 10px; cursor: pointer; color: #1a73e8; margin-left: 3px; }
+        .edit-icon { font-size: 10px; cursor: pointer; color: #1877F2; margin-left: 3px; }
         .csdd-info { font-size: 10px; color: #555; margin-top: 2px; }
         .empty-msg { text-align: center; color: #888; padding: 40px; font-size: 15px; }
 
@@ -60,45 +62,121 @@
 
         .archive-box { max-height: 100px; overflow-y: auto; font-size: 10px; color: #555; margin-top: 5px; background: #fafafa; padding: 4px; border-radius: 4px; border: 1px solid #eee; }
         .log-section { margin-top: 30px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 12px; }
-        .log-section h4 { margin-top: 0; color: #1a73e8; }
+        .log-section h4 { margin-top: 0; color: #1877F2; }
         .log-item { border-bottom: 1px solid #f0f0f0; padding: 4px 0; color: #555; }
 
         #hitchModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 10000; }
         .modal-content { background: #fff; padding: 25px; border-radius: 10px; width: 480px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); position: relative; }
-        .modal-content h3 { margin-top: 0; color: #1a73e8; }
+        .modal-content h3 { margin-top: 0; color: #1877F2; }
         .modal-content input { width: 100%; padding: 10px; font-size: 14px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; margin-top: 10px; }
         .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
         
         .modal-suggestions { position: absolute; left: 25px; right: 25px; background: #fff; border: 1px solid #ddd; border-radius: 0 0 6px 6px; max-height: 160px; overflow-y: auto; z-index: 1001; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: none; }
         .modal-suggestion-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
-        .modal-suggestion-item:hover { background: #e8f0fe; color: #1a73e8; }
+        .modal-suggestion-item:hover { background: #e8f0fe; color: #1877F2; }
     </style>
 
-    <!-- Подключаем Firebase SDK -->
+    <!-- Подключение Firebase Firestore к общей базе парка -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc, addDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyDNPpYQrptuNo7ATKnFs0yKJE4u39Zyxms",
-            authDomain: "teessatrans-fleet.firebaseapp.com",
-            projectId: "teessatrans-fleet",
-            storageBucket: "teessatrans-fleet.firebasestorage.app",
-            messagingSenderId: "517400275173",
-            appId: "1:517400275173:web:0de5eee9577f9fa353cbc"
+            apiKey: "AIzaSyAJ4ykJTV8CcB-HpluK6fmPNhG0jegI7_4",
+            authDomain: "gmp-demo-project-871467764.firebaseapp.com",
+            projectId: "gmp-demo-project-871467764",
+            storageBucket: "gmp-demo-project-871467764.firebasestorage.app",
+            messagingSenderId: "1083767995536",
+            appId: "1:1083767995536:web:14b4e02ebeed35b2c4ac15"
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = getFirestore(app, "ai-studio-fleetmanager-245471da-6146-4754-bb2a-104e36cc9502");
 
-        window.syncWithFirebase = async function() {
+        // 1. Онлайн подписка на технику
+        onSnapshot(collection(db, "fleet_units"), (snapshot) => {
+            if (!snapshot.empty) {
+                const cloudUnits = snapshot.docs.map(d => {
+                    const data = d.data();
+                    return {
+                        id: d.id,
+                        num: data.licensePlate || data.num,
+                        model: `${data.make || ''} ${data.model || ''}`.trim() || data.model || '—',
+                        type: data.type || 'truck',
+                        driver: data.currentDriver || data.driver || 'Водитель не указан',
+                        hitch: data.trailerHitchPlate || data.hitch || '—',
+                        ta: data.motExpiryDate || data.ta || '—',
+                        ins: data.octaExpiryDate || data.ins || '—',
+                        lic: data.licenseExpiryDate || data.lic || '—',
+                        tacho: data.tachoExpiryDate || data.tacho || '—',
+                        vin: data.vin || '—',
+                        reg: data.firstRegistrationDate || data.reg || '—',
+                        task: data.activeRepairIssue || data.task || 'Нет',
+                        history: data.repairHistory ? data.repairHistory.map(h => `[${h.completedDate || ''}] ${h.issue}: ${h.resolution || ''}`) : (data.history || []),
+                        tire: data.tire || 'Стандарт',
+                        bat: data.bat || 'Ок',
+                        pads: data.brakePads || data.pads || 'Ок',
+                        clutch: data.clutch || 'Ок'
+                    };
+                });
+                window.updateFleetFromCloud(cloudUnits);
+            }
+        });
+
+        // 2. Онлайн подписка на общий лог
+        onSnapshot(query(collection(db, "action_logs"), orderBy("timestamp", "desc"), limit(40)), (snapshot) => {
+            const logs = snapshot.docs.map(d => {
+                const data = d.data();
+                const time = data.timestamp ? new Date(data.timestamp).toLocaleString('ru-RU') : '';
+                return `[${time}] ${data.userName || 'Юрий'}: ${data.title} — ${data.description || ''}`;
+            });
+            window.updateLogsFromCloud(logs);
+        });
+
+        // 3. Сохранение изменений в Firestore
+        window.cloudSaveUnit = async function(unit) {
             try {
-                for (let item of fleetData) {
-                    const docId = (item.num || "car").toString().replace(/[\/\\#,+()$~%.'":*?<>{}]/g, "_");
-                    await setDoc(doc(db, "fleet", docId), item);
-                }
+                const unitRef = doc(db, "fleet_units", unit.id || unit.num);
+                await setDoc(unitRef, {
+                    licensePlate: unit.num,
+                    model: unit.model,
+                    currentDriver: unit.driver,
+                    trailerHitchPlate: unit.hitch,
+                    motExpiryDate: unit.ta,
+                    octaExpiryDate: unit.ins,
+                    licenseExpiryDate: unit.lic,
+                    tachoExpiryDate: unit.tacho,
+                    activeRepairIssue: unit.task === 'Нет' ? '' : unit.task,
+                    vin: unit.vin,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
             } catch (err) {
-                console.error("Firebase sync error:", err);
+                console.error("Ошибка сохранения в облако:", err);
+            }
+        };
+
+        // 4. Отправка лога в Firestore
+        window.cloudLog = async function(title, desc, num) {
+            try {
+                await addDoc(collection(db, "action_logs"), {
+                    title: title,
+                    description: desc || '',
+                    userName: "Юрий",
+                    unitLicensePlate: num || '',
+                    timestamp: new Date().toISOString(),
+                    type: "general"
+                });
+            } catch (err) {
+                console.error("Ошибка записи лога:", err);
+            }
+        };
+
+        // 5. Удаление из Firestore
+        window.cloudDeleteUnit = async function(unitId) {
+            try {
+                await deleteDoc(doc(db, "fleet_units", unitId));
+            } catch (err) {
+                console.error("Ошибка удаления:", err);
             }
         };
     </script>
@@ -117,8 +195,9 @@
 
 <div class="container" id="mainContainer">
     <h2>
-        🚚 Управление автопарком и прицепами (Всего в базе: <span id="totalCount">0</span> единиц)
+        🚚 Управление автопарком и прицепами (Всего: <span id="totalCount">0</span> ед.)
         <div class="top-actions">
+            <span class="sync-badge">🟢 Cloud Firestore Online</span>
             <button class="btn-action btn-success" onclick="addNewItem()">➕ Добавить единицу</button>
             <button class="btn-action" onclick="exportData()">💾 Скачать базу</button>
         </div>
@@ -150,7 +229,7 @@
             <option value="trailer">Прицепы</option>
         </select>
         <div class="search-group">
-            <input type="text" id="searchInput" class="search-box" placeholder="🔍 Введите госномер, водителя или прицеп..." oninput="onSearchInput()" autocomplete="off">
+            <input type="text" id="searchInput" class="search-box" placeholder="🔍 Введите госномер (например, 6136), водителя или прицеп..." oninput="onSearchInput()" autocomplete="off">
             <div id="suggestions" class="suggestions"></div>
         </div>
     </div>
@@ -178,12 +257,12 @@
     <div id="emptyMessage" class="empty-msg">Используйте поисковую строку выше для поиска...</div>
 
     <div class="log-section">
-        <h4>📋 Общий лог действий и изменений в парке</h4>
+        <h4>📋 Общий лог действий и изменений в парке (Firestore Live)</h4>
         <div id="actionLogContainer"></div>
     </div>
 </div>
 
-<!-- Модальное окно перецепки -->
+<!-- Модальное окно сцепки -->
 <div id="hitchModal">
     <div class="modal-content">
         <h3>🔗 Изменение сцепки</h3>
@@ -199,200 +278,26 @@
 </div>
 
 <script>
-    const embeddedFleet = [
-      { "ta": "28.07.2026", "bat": "Ок", "ins": "12.12.2026", "lic": "07.01.2027", "num": "NN1048", "reg": "30.05.2023", "vin": "YV2RTY0A8PA330579", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "V6059", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Vadikankak", "history": ["Учет в CSDD"] },
-      { "ta": "15.05.2024", "bat": "Ок", "ins": "12.12.2026", "lic": "17.01.2027", "num": "KI369", "reg": "10.01.2020", "vin": "YV2RTY0A000001", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B412F", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "10.06.2024", "bat": "Ок", "ins": "12.12.2026", "lic": "17.01.2027", "num": "KI364", "reg": "10.01.2020", "vin": "YV2RTY0A000002", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B678G", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "03.12.2025", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "MR8199", "reg": "26.11.2020", "vin": "YV2RTY0A6MA871495", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B825G", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "28.04.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B412F", "reg": "23.01.2023", "vin": "WSM00000003411797", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "KI369", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "05.06.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B678G", "reg": "22.02.2023", "vin": "WSM00000003418754", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "KI364", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "24.04.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B825G", "reg": "08.03.2023", "vin": "WSM00000003418760", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "MR8199", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "02.06.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B193K", "reg": "23.03.2023", "vin": "WSM00000003418765", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "14.07.2026", "bat": "Ок", "ins": "12.12.2026", "lic": "01.01.2027", "num": "NM9426", "reg": "25.05.2023", "vin": "YV2RTY0A2PA330299", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "—", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Vladimir Akinshets", "history": ["Учет в CSDD"] },
-      { "ta": "03.12.2025", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "MR8197", "reg": "26.11.2020", "vin": "YV2RTY0A6MA871496", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B193K", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "13.05.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "Z5313", "reg": "19.11.2019", "vin": "WSM00000003342541", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "27.01.2026", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "MR1346", "reg": "27.10.2020", "vin": "YV2RTY0A3MA869395", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "—", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "14.01.2026", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "MR8195", "reg": "26.11.2020", "vin": "YV2RTY0A9MA871541", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "—", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "11.12.2025", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "MO9427", "reg": "16.10.2020", "vin": "YV2RTY0A2MA869002", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "—", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "26.05.2026", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "MR849", "reg": "23.10.2020", "vin": "YV2RTY0A3MA869364", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "—", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "22.01.2026", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "MR8579", "reg": "30.11.2020", "vin": "YV2RTY0A7MA871666", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "—", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "12.02.2026", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "MR1352", "reg": "27.10.2020", "vin": "YV2RTY0A0MA869354", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "—", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "02.04.2026", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "MR8193", "reg": "26.11.2020", "vin": "YV2RTY0A9MA871457", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "—", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "21.07.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A711C", "reg": "20.11.2020", "vin": "WSM00000003356258", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OI9416", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "09.04.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A907S", "reg": "28.02.2022", "vin": "WSM00000003381454", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NS2718", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "12.08.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A906S", "reg": "28.02.2022", "vin": "WSM00000003381453", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "26.01.2016", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "GP203", "reg": "19.04.2007", "vin": "VF7YCBMFC11160567", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "—", "model": "CITROEN JUMPER", "tacho": "15.10.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "26.01.2016", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "GM3673", "reg": "19.04.2007", "vin": "VF7YCBMFC11160568", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "—", "model": "CITROEN JUMPER", "tacho": "15.10.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "15.05.2015", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "N3071", "reg": "19.03.2008", "vin": "WKESD000000393867", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "KRONE SD", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "21.07.2017", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "GU584", "reg": "09.10.2007", "vin": "VF7YCBMFC11231204", "pads": "Ок", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "—", "model": "CITROEN JUMPER", "tacho": "15.10.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "22.07.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B122H", "reg": "21.03.2023", "vin": "WSM00000003418752", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NN6136", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "30.07.2025", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A574R", "reg": "18.01.2022", "vin": "WSM00000003381440", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "14.07.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A779S", "reg": "28.02.2022", "vin": "WSM00000003381443", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NP6024", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "26.01.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "23.01.2027", "num": "NJ3511", "reg": "23.01.2023", "vin": "YS2R4X200P5685137", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B123H", "model": "SCANIA R 450", "tacho": "15.10.2026", "driver": "Jurij Vasiljonok", "history": ["Учет в CSDD"] },
-      { "ta": "11.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "20.01.2027", "num": "NJ3732", "reg": "16.02.2023", "vin": "YS2R4X200P2196515", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B191K", "model": "SCANIA R 450", "tacho": "15.10.2026", "driver": "Vjaceslav Bogdanov", "history": ["Учет в CSDD"] },
-      { "ta": "17.03.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "15.01.2027", "num": "NK6573", "reg": "14.02.2023", "vin": "W1T96340610663660", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "U6834", "model": "MERCEDES BENZ ACTROS", "tacho": "15.10.2026", "driver": "Boleslav Kindzulis", "history": ["Учет в CSDD"] },
-      { "ta": "11.05.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "23.01.2027", "num": "NK7629", "reg": "23.02.2023", "vin": "W1T96340310664958", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "Z5279", "model": "MERCEDES BENZ ACTROS", "tacho": "15.10.2026", "driver": "Ruslan Adamkovich", "history": ["Учет в CSDD"] },
-      { "ta": "18.03.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "31.12.2026", "num": "NK8540", "reg": "28.02.2023", "vin": "W1T96340910667668", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "U7369", "model": "MERCEDES BENZ ACTROS", "tacho": "15.10.2026", "driver": "Aleksandr Smolinskiy", "history": ["Учет в CSDD"] },
-      { "ta": "25.06.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "NJ7735", "reg": "15.03.2023", "vin": "YS2R4X200P2196762", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A765S", "model": "SCANIA R 450", "tacho": "15.10.2026", "driver": "Oleg Cepalov", "history": ["Учет в CSDD"] },
-      { "ta": "21.05.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "16.01.2027", "num": "NJ7736", "reg": "15.03.2023", "vin": "YS2R4X200P2196977", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "Z4785", "model": "SCANIA R 450", "tacho": "15.10.2026", "driver": "Aleksandr Kiryakou", "history": ["Учет в CSDD"] },
-      { "ta": "08.04.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "22.01.2027", "num": "NL3854", "reg": "21.03.2023", "vin": "W1T96340110669060", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B674G", "model": "MERCEDES BENZ ACTROS", "tacho": "15.10.2026", "driver": "Anton Slics", "history": ["Учет в CSDD"] },
-      { "ta": "06.05.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "22.01.2027", "num": "NL3944", "reg": "22.03.2023", "vin": "W1T96340310669061", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "Z2941", "model": "MERCEDES BENZ ACTROS", "tacho": "15.10.2026", "driver": "Andrei Prikuls", "history": ["Учет в CSDD"] },
-      { "ta": "05.05.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "01.01.2027", "num": "NM9425", "reg": "25.05.2023", "vin": "YV2RTY0A5PA330328", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B276F", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Igorj Cigankov", "history": ["Учет в CSDD"] },
-      { "ta": "20.08.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "17.01.2027", "num": "NN1045", "reg": "30.05.2023", "vin": "YV2RTY0A8PA330372", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B275F", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Oleg Lisih", "history": ["Учет в CSDD"] },
-      { "ta": "18.06.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "08.01.2027", "num": "NN1050", "reg": "30.05.2023", "vin": "YV2RTY0A1PA330309", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A910S", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Vladimir Volkov", "history": ["Учет в CSDD"] },
-      { "ta": "08.06.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "10.01.2027", "num": "NN6134", "reg": "15.06.2023", "vin": "YV2RTY0A6PA331441", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B411F", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Jurijs Samins", "history": ["Учет в CSDD"] },
-      { "ta": "18.06.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "10.01.2027", "num": "NN6136", "reg": "15.06.2023", "vin": "YV2RTY0A9PA331000", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B122H", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Aivar Merkitis", "history": ["Учет в CSDD"] },
-      { "ta": "17.06.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "13.01.2027", "num": "NN7076", "reg": "22.06.2023", "vin": "YV2RTY0A4PA331616", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B190K", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Igor Polovnikov", "history": ["Учет в CSDD"] },
-      { "ta": "25.08.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "17.01.2027", "num": "NN7079", "reg": "22.06.2023", "vin": "YV2RTY0A1PA331539", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B412F", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Janis Bahanovskis", "history": ["Учет в CSDD"] },
-      { "ta": "01.09.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "20.01.2027", "num": "NO6784", "reg": "03.08.2023", "vin": "YV2RTY0A6PA331682", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B826G", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Andrei Ostafij", "history": ["Учет в CSDD"] },
-      { "ta": "23.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "15.01.2027", "num": "NO7716", "reg": "18.09.2023", "vin": "YS2R4X200P5714368", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "C816K", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Viktor Barzhemskiy", "history": ["Учет в CSDD"] },
-      { "ta": "27.11.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "01.01.2027", "num": "NO7789", "reg": "22.09.2023", "vin": "YS2R4X200P5714454", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "C877K", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Istratij Gatezs", "history": ["Учет в CSDD"] },
-      { "ta": "28.10.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "09.01.2027", "num": "NO7917", "reg": "05.10.2023", "vin": "YS2R4X200P5716650", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B413F", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Jurij Koleda", "history": ["Учет в CSDD"] },
-      { "ta": "02.03.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "30.01.2027", "num": "NO8116", "reg": "26.10.2023", "vin": "YS2R4X200P5717075", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B124H", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Aleksandr Macuk", "history": ["Учет в CSDD"] },
-      { "ta": "13.11.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "20.01.2027", "num": "NP6024", "reg": "16.11.2023", "vin": "YS2R4X200P5717485", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A779S", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Valerij Yurkavets", "history": ["Учет в CSDD"] },
-      { "ta": "22.01.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "15.01.2027", "num": "NS2718", "reg": "13.11.2023", "vin": "YS2R4X200P5718633", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A907S", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Viktor Savickij", "history": ["Учет в CSDD"] },
-      { "ta": "31.03.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "23.01.2027", "num": "NY7009", "reg": "16.01.2025", "vin": "YS2R4X200S2207256", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "C405L", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Valentin Hmelnickij", "history": ["Учет в CSDD"] },
-      { "ta": "20.01.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "23.01.2027", "num": "NY7010", "reg": "16.01.2025", "vin": "YS2R4X200S2207268", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A995S", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Aleksandr Smolinskiy", "history": ["Учет в CSDD"] },
-      { "ta": "22.01.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "23.01.2027", "num": "NY7011", "reg": "16.01.2025", "vin": "YS2R4X200S2207265", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A997S", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Valerij Fjodorov", "history": ["Учет в CSDD"] },
-      { "ta": "20.01.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "27.01.2027", "num": "NZ6197", "reg": "20.01.2025", "vin": "YS2R4X200S2207253", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B792G", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Vadim Mironov", "history": ["Учет в CSDD"] },
-      { "ta": "27.01.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "27.01.2027", "num": "NZ6198", "reg": "20.01.2025", "vin": "YS2R4X200S2207262", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "bez pricepa", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Jurij Maslobojev", "history": ["Учет в CSDD"] },
-      { "ta": "07.01.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "27.01.2027", "num": "NZ6215", "reg": "22.01.2025", "vin": "YS2R4X200S2207282", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A710C", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Viktor Potalujev", "history": ["Учет в CSDD"] },
-      { "ta": "29.06.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "12.01.2027", "num": "OE3177", "reg": "03.07.2025", "vin": "YS2R4X200S2211155", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "Robinson", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Nikolai Timofejevs", "history": ["Учет в CSDD"] },
-      { "ta": "12.07.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "12.01.2027", "num": "OE3178", "reg": "03.07.2025", "vin": "YS2R4X208S2211162", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A709C", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Dmitrij Nayer", "history": ["Учет в CSDD"] },
-      { "ta": "06.07.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "12.01.2027", "num": "OE3179", "reg": "03.07.2025", "vin": "YS2R4X209S2211168", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "Z3732", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Mihail Smirnov", "history": ["Учет в CSDD"] },
-      { "ta": "15.07.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "12.01.2027", "num": "OE3313", "reg": "03.07.2025", "vin": "YS2R4X206S2211192", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "C823K", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Viktor Abolins", "history": ["Учет в CSDD"] },
-      { "ta": "29.07.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "12.01.2027", "num": "OE3315", "reg": "03.07.2025", "vin": "YS2R4X206S2211225", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "Robinson", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Jurij Kvitov", "history": ["Учет в CSDD"] },
-      { "ta": "01.07.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "15.01.2027", "num": "OE3316", "reg": "03.07.2025", "vin": "YS2R4X204S2211188", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "V6062", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Vadim Kokin", "history": ["Учет в CSDD"] },
-      { "ta": "07.07.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "26.01.2027", "num": "OE3317", "reg": "03.07.2025", "vin": "YS2R4X206S2211208", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "Robinson", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Igorj Boka", "history": ["Учет в CSDD"] },
-      { "ta": "14.07.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "OE3319", "reg": "03.07.2025", "vin": "YS2R4X203S2211182", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "Robinson", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Mikola Honcarenko", "history": ["Учет в CSDD"] },
-      { "ta": "13.07.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "15.01.2027", "num": "OE3320", "reg": "03.07.2025", "vin": "YS2R4X209S2211199", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B575F", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Aigar Pots", "history": ["Учет в CSDD"] },
-      { "ta": "11.06.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "15.01.2027", "num": "OE3321", "reg": "03.07.2025", "vin": "YS2R4X209S2211218", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B678G", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Pavel Bondar", "history": ["Учет в CSDD"] },
-      { "ta": "01.07.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "05.01.2027", "num": "OE3324", "reg": "03.07.2025", "vin": "YS2R4X203S2211179", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "C821K", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Aleksandr Draba", "history": ["Учет в CSDD"] },
-      { "ta": "29.06.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "05.01.2027", "num": "OE3329", "reg": "04.07.2025", "vin": "YS2R4X203S2211229", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A788C", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Aleksandr Tihanenka", "history": ["Учет в CSDD"] },
-      { "ta": "10.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "12.01.2027", "num": "OL2062", "reg": "10.02.2026", "vin": "YV2RTY0A6TB546208", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "V7646", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Albert Skels", "history": ["Учет в CSDD"] },
-      { "ta": "22.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "23.01.2027", "num": "OL3013", "reg": "20.02.2026", "vin": "YV2RTY0A2TB547193", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "C819K", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Mamuka Kucava", "history": ["Учет в CSDD"] },
-      { "ta": "18.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "22.01.2027", "num": "OI9370", "reg": "18.02.2026", "vin": "YS2R4X201T2223848", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A674C", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Konstantin Kuhto", "history": ["Учет в CSDD"] },
-      { "ta": "18.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "22.01.2027", "num": "OI9371", "reg": "18.02.2026", "vin": "YS2R4X203T2223835", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B193K", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Aleksandr Bura", "history": ["Учет в CSDD"] },
-      { "ta": "18.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "OI9372", "reg": "18.02.2026", "vin": "YS2R4X201T2223803", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A952B", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Andrei Bilnov", "history": ["Учет в CSDD"] },
-      { "ta": "18.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "OI9373", "reg": "18.02.2026", "vin": "YS2R4X208T2223801", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A908S", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Vladimir Sulha", "history": ["Учет в CSDD"] },
-      { "ta": "18.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "OI9374", "reg": "18.02.2026", "vin": "YS2R4X201T2223817", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B203H", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Oleg Dycko", "history": ["Учет в CSDD"] },
-      { "ta": "18.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "05.01.2027", "num": "OI9375", "reg": "18.02.2026", "vin": "YS2R4X209T2223841", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A676C", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Mihailo Tsopa", "history": ["Учет в CSDD"] },
-      { "ta": "19.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "24.01.2027", "num": "OI9384", "reg": "19.02.2026", "vin": "YS2R4X208T2223880", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B121H", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Igorj Pjatkun", "history": ["Учет в CSDD"] },
-      { "ta": "19.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "24.01.2027", "num": "OI9385", "reg": "19.02.2026", "vin": "YS2R4X208T2223815", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "U3040", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Vigurs Kasparenok", "history": ["Учет в CSDD"] },
-      { "ta": "25.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "26.01.2027", "num": "OI9414", "reg": "25.02.2026", "vin": "YS2R4X204T2223813", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "Robinson", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Yevgenij Aniskavec", "history": ["Учет в CSDD"] },
-      { "ta": "25.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "26.01.2027", "num": "OI9415", "reg": "25.02.2026", "vin": "YS2R4X200T2223825", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "Robinson", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Ivan Brusov", "history": ["Учет в CSDD"] },
-      { "ta": "25.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "26.01.2027", "num": "OI9416", "reg": "25.02.2026", "vin": "YS2R4X204T2223827", "pads": "90%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A711C", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Valentin Railian", "history": ["Учет в CSDD"] },
-      { "ta": "25.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "26.01.2027", "num": "OI9417", "reg": "25.02.2026", "vin": "YS2R4X208T2223829", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A766S", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Sergei Sokolov", "history": ["Учет в CSDD"] },
-      { "ta": "26.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "05.01.2027", "num": "OI9424", "reg": "26.02.2026", "vin": "YS2R4X202T2223907", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "Z2940", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Aleksandr Lazucenok", "history": ["Учет в CSDD"] },
-      { "ta": "26.02.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "05.01.2027", "num": "OI9425", "reg": "26.02.2026", "vin": "YS2R4X200T2223856", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A951B", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Ivan Makejev", "history": ["Учет в CSDD"] },
-      { "ta": "02.03.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "05.01.2027", "num": "OJ6144", "reg": "02.03.2026", "vin": "YS2R4X202T2223972", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "C401L", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Genadij Kurlajev", "history": ["Учет в CSDD"] },
-      { "ta": "02.03.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "05.01.2027", "num": "OJ6145", "reg": "02.03.2026", "vin": "YS2R4X208T2223975", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "B824G", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Artur Vasiljev", "history": ["Учет в CSDD"] },
-      { "ta": "02.03.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "04.01.2027", "num": "OJ6146", "reg": "02.03.2026", "vin": "YS2R4X201T2223977", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A765S", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Aleksandr Aniskavec", "history": ["Учет в CSDD"] },
-      { "ta": "05.03.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "10.01.2027", "num": "OJ6187", "reg": "05.03.2026", "vin": "YS2R4X205T2224159", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A672C", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Genadij Kasjan", "history": ["Учет в CSDD"] },
-      { "ta": "15.03.2027", "bat": "Новые", "ins": "12.12.2026", "lic": "26.10.2026", "num": "NK6876", "reg": "16.02.2023", "vin": "YV2RT40A1PB416870", "pads": "90%", "task": "Замена масла", "tire": "Новая", "type": "truck", "hitch": "V5154", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Viktor Barkancev", "history": ["Учет в CSDD"] },
-      { "ta": "09.03.2027", "bat": "Ок", "ins": "12.12.2026", "lic": "21.01.2027", "num": "NK7306", "reg": "21.02.2023", "vin": "YV2RT40A9PA323004", "pads": "Ок ~70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A769S", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Jurij Lebedev", "history": ["Учет в CSDD"] },
-      { "ta": "08.03.2027", "bat": "Ок", "ins": "14.12.2026", "lic": "20.10.2026", "num": "NK8718", "reg": "01.03.2023", "vin": "YV2RT40A2PA323460", "pads": "70%", "task": "Нет", "tire": "Стандарт", "type": "truck", "hitch": "A363P", "model": "VOLVO FH", "tacho": "20.10.2026", "driver": "Aleksei Abdullajev", "history": ["Учет в CSDD"] },
-      { "ta": "15.04.2027", "bat": "Ок", "ins": "05.02.2027", "lic": "20.10.2026", "num": "NL1986", "reg": "07.03.2023", "vin": "YV2RT40A1PA323529", "pads": "90%", "task": "Нет", "tire": "Новая", "type": "truck", "hitch": "A936L", "model": "VOLVO FH", "tacho": "12.12.2026", "driver": "Igorj Drozd", "history": ["Учет в CSDD"] },
-      { "ta": "08.04.2027", "bat": "Ок", "ins": "18.01.2027", "lic": "30.10.2026", "num": "NL3245", "reg": "15.03.2023", "vin": "YV2RT40A5PB422218", "pads": "60%", "task": "Проверить суппорт", "tire": "Стандарт", "type": "truck", "hitch": "pricepa", "model": "VOLVO FH", "tacho": "05.11.2026", "driver": "Водитель не указан", "history": ["Учет в CSDD"] },
-      { "ta": "11.09.2027", "bat": "Новые", "ins": "12.12.2026", "lic": "16.01.2027", "num": "OG6785", "reg": "11.09.2025", "vin": "YV2RTY0AOG6785", "pads": "90%", "task": "Нет", "tire": "Новая", "type": "truck", "hitch": "B128F", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Oleg Podluznij", "history": ["Учет в CSDD"] },
-      { "ta": "11.09.2027", "bat": "Новые", "ins": "12.12.2026", "lic": "16.01.2027", "num": "OG6786", "reg": "11.09.2025", "vin": "YV2RTY0AOG6786", "pads": "90%", "task": "Нет", "tire": "Новая", "type": "truck", "hitch": "A937L", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Nikolai Dikarkin", "history": ["Учет в CSDD"] },
-      { "ta": "11.09.2027", "bat": "Новые", "ins": "12.12.2026", "lic": "16.01.2027", "num": "OG6787", "reg": "11.09.2025", "vin": "YV2RTY0AOG6787", "pads": "90%", "task": "Нет", "tire": "Новая", "type": "truck", "hitch": "A768D", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Sergei Anciferov", "history": ["Учет в CSDD"] },
-      { "ta": "17.09.2027", "bat": "Новые", "ins": "12.12.2026", "lic": "21.01.2027", "num": "OG6847", "reg": "17.09.2025", "vin": "YV2RTY0AOG6847", "pads": "90%", "task": "Нет", "tire": "Новая", "type": "truck", "hitch": "T6357", "model": "SCANIA R 460", "tacho": "15.10.2026", "driver": "Mairis Marsalks", "history": ["Учет в CSDD"] },
-      { "ta": "28.06.2027", "bat": "Новые", "ins": "12.12.2026", "lic": "29.01.2027", "num": "OP1925", "reg": "26.06.2026", "vin": "YV2RTY0AOP1925", "pads": "95%", "task": "Нет", "tire": "Новая", "type": "truck", "hitch": "A475V", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Aleksandr Moisejev", "history": ["Учет в CSDD"] },
-      { "ta": "29.06.2027", "bat": "Новые", "ins": "12.12.2026", "lic": "08.01.2027", "num": "ON1417", "reg": "29.06.2026", "vin": "YV2RTY0AON1417", "pads": "95%", "task": "Нет", "tire": "Новая", "type": "truck", "hitch": "V4986", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Aleksandr Bondin", "history": ["Учет в CSDD"] },
-      { "ta": "22.07.2027", "bat": "Новые", "ins": "12.12.2026", "lic": "29.01.2027", "num": "ON1644", "reg": "22.07.2026", "vin": "YV2RTY0AON1644", "pads": "95%", "task": "Нет", "tire": "Новая", "type": "truck", "hitch": "B983J", "model": "VOLVO FH", "tacho": "15.10.2026", "driver": "Aleksandr Bodnarjuk", "history": ["Учет в CSDD"] },
-      { "ta": "28.08.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A363P", "reg": "10.08.2017", "vin": "WSM00000005182830", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NK6876", "model": "SCHMITZ SKO 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "26.08.2027", "bat": "—", "ins": "30.11.2026", "lic": "21.01.2027", "num": "A475V", "reg": "26.04.2022", "vin": "WSM00000005291421", "pads": "70%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OP1925", "model": "SCHMITZ SKO 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "18.12.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A672C", "reg": "18.11.2020", "vin": "WSM00000003356255", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OJ6187", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "06.04.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A674C", "reg": "16.11.2020", "vin": "WSM00000003356250", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OI9370", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "08.04.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A676C", "reg": "16.11.2020", "vin": "WSM00000003356252", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OI9375", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "06.01.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A677C", "reg": "16.11.2020", "vin": "WSM00000003356251", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "02.07.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A709C", "reg": "20.11.2020", "vin": "WSM00000003356256", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OE3178", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "03.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A710C", "reg": "20.11.2020", "vin": "WSM00000003356257", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NZ6215", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "08.10.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A763S", "reg": "28.02.2022", "vin": "WSM00000003381441", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NS2718", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "14.04.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A765S", "reg": "28.02.2022", "vin": "WSM00000003381444", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OI9372", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "08.01.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A766S", "reg": "28.02.2022", "vin": "WSM00000003381442", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OI9417", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "11.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A768D", "reg": "05.01.2021", "vin": "WSM00000005256444", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OG6787", "model": "SCHMITZ SKO 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "01.09.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A768S", "reg": "28.02.2022", "vin": "WSM00000003381452", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NM9425", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "14.07.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A769S", "reg": "28.02.2022", "vin": "WSM00000003381451", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NK7306", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "06.10.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A788C", "reg": "16.11.2020", "vin": "WSM00000003356253", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OE3329", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "06.05.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A789C", "reg": "18.11.2020", "vin": "WSM00000003356254", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "31.05.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A909S", "reg": "28.02.2022", "vin": "WSM00000003381456", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "06.01.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A910S", "reg": "28.02.2022", "vin": "WSM00000003381457", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NN1050", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "20.10.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A936L", "reg": "29.07.2021", "vin": "WSM00000005275042", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NL1986", "model": "SCHMITZ SKO 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "10.11.2026", "bat": "—", "ins": "15.12.2026", "lic": "21.01.2027", "num": "A937L", "reg": "29.07.2021", "vin": "WSM00000005275043", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OG6786", "model": "SCHMITZ SKO 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "01.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A951B", "reg": "22.10.2020", "vin": "WSM00000003356248", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OI9425", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "29.06.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A952B", "reg": "22.10.2020", "vin": "WSM00000003356249", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OI9372", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "26.01.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A995S", "reg": "10.03.2022", "vin": "WSM00000003381458", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NY7010", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "27.04.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A996S", "reg": "10.03.2022", "vin": "WSM00000003381459", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NP6024", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "16.09.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "A997S", "reg": "10.03.2022", "vin": "WSM00000003381460", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NY7011", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "13.05.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B119H", "reg": "15.03.2023", "vin": "WSM00000003418748", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "06.04.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B121H", "reg": "15.03.2023", "vin": "WSM00000003418749", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OI9384", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "09.07.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B123H", "reg": "21.03.2023", "vin": "WSM00000003418750", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NJ3511", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "28.01.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B124H", "reg": "21.03.2023", "vin": "WSM00000003418751", "pads": "90%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NO8116", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "15.03.2027", "bat": "—", "ins": "22.10.2026", "lic": "21.01.2027", "num": "B128F", "reg": "31.03.2022", "vin": "WSM00000005280186", "pads": "50%", "task": "Ремонт тента", "tire": "Износ", "type": "trailer", "hitch": "OG6785", "model": "SCHMITZ SKO 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "02.03.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B190K", "reg": "28.03.2023", "vin": "WSM00000003418766", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NN7076", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "13.10.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B191K", "reg": "28.03.2023", "vin": "WSM00000003418767", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NJ3732", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "20.05.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B203H", "reg": "23.03.2023", "vin": "WSM00000003418762", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OI9374", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "20.08.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B275F", "reg": "16.01.2023", "vin": "WSM00000003411794", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NN1045", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "27.04.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B276F", "reg": "16.01.2023", "vin": "WSM00000003411795", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NM9425", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "20.01.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B336Z", "reg": "15.01.2022", "vin": "WSM00000003411799", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OG6847", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "28.05.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B411F", "reg": "23.01.2023", "vin": "WSM00000003411798", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NN6134", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "26.07.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B413F", "reg": "23.01.2023", "vin": "WSM00000003411796", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NO7917", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "11.06.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B480H", "reg": "23.03.2023", "vin": "WSM00000003418763", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OP1925", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "13.07.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B481H", "reg": "23.03.2023", "vin": "WSM00000003418764", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "27.07.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B575F", "reg": "08.02.2023", "vin": "WSM00000003418753", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OE3320", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "23.04.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B672G", "reg": "22.02.2023", "vin": "WSM00000003418756", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "16.03.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B674G", "reg": "22.02.2023", "vin": "WSM00000003418757", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NL3854", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "19.08.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B677G", "reg": "22.02.2023", "vin": "WSM00000003418755", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "02.06.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B792G", "reg": "06.03.2023", "vin": "WSM00000003418758", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NZ6197", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "06.05.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B824G", "reg": "06.03.2023", "vin": "WSM00000003418759", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OJ6145", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "20.11.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "B826G", "reg": "08.03.2023", "vin": "WSM00000003418761", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NO6784", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "14.06.2027", "bat": "—", "ins": "11.11.2026", "lic": "21.01.2027", "num": "B983J", "reg": "24.04.2023", "vin": "WSM00000005307761", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "ON1644", "model": "SCHMITZ SKO 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "18.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "C401L", "reg": "18.02.2026", "vin": "WSM000000TA067616", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OJ6144", "model": "SCHMITZ SCS 24/L", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "18.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "C402L", "reg": "18.02.2026", "vin": "WSM000002TA067617", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24/L", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "02.03.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "C403L", "reg": "02.03.2026", "vin": "WSM000004TA067618", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24/L", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "24.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "C405L", "reg": "24.02.2026", "vin": "WSM000006TA067619", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NY7009", "model": "SCHMITZ SCS 24/L", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "05.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "C806K", "reg": "05.02.2026", "vin": "WSM000001TA067608", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24/L", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "23.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "C816K", "reg": "23.02.2026", "vin": "WSM000003TA067609", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NO7716", "model": "SCHMITZ SCS 24/L", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "09.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "C819K", "reg": "09.02.2026", "vin": "WSM00000XTA067610", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OL3013", "model": "SCHMITZ SCS 24/L", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "09.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "C821K", "reg": "09.02.2026", "vin": "WSM000001TA067611", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OE3324", "model": "SCHMITZ SCS 24/L", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "12.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "C823K", "reg": "12.02.2026", "vin": "WSM000005TA067613", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OE3313", "model": "SCHMITZ SCS 24/L", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "12.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "C825K", "reg": "12.02.2026", "vin": "WSM000007TA067614", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24/L", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "12.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "C876K", "reg": "12.02.2026", "vin": "WSM000003TA067612", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24/L", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "15.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "C877K", "reg": "13.02.2026", "vin": "WSM000009TA067615", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NO7789", "model": "SCHMITZ SCS 24/L", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "15.03.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "Doma", "reg": "01.01.2022", "vin": "WSM000000Doma", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "04.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "T6357", "reg": "16.03.2016", "vin": "WSM00000005156023", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OG6847", "model": "SCHMITZ SKO 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "13.11.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "T8556", "reg": "28.06.2016", "vin": "WSM00000003247380", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "15.03.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "T8559", "reg": "01.01.2022", "vin": "WSM000000T8559", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "07.04.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "U3040", "reg": "28.02.2017", "vin": "WSM00000003267264", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OI9385", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "30.09.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "U3595", "reg": "30.03.2017", "vin": "WSM00000003267265", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NO7789", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "20.10.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "U6834", "reg": "14.09.2017", "vin": "WSM00000003283058", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NK6573", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "20.01.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "U6835", "reg": "14.09.2017", "vin": "WSM00000003283059", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "09.12.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "U7368", "reg": "27.09.2017", "vin": "WSM00000003283060", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "18.06.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "U7369", "reg": "27.09.2017", "vin": "WSM00000003283061", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NK8540", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "21.10.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "V4986", "reg": "29.08.2018", "vin": "WSM00000005208777", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "ON1417", "model": "SCHMITZ SKO 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "16.02.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "V5154", "reg": "16.03.2016", "vin": "WSM00000005156022", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NK6876", "model": "SCHMITZ SKO 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "01.10.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "V6059", "reg": "16.10.2018", "vin": "WSM00000003306405", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NN1048", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "20.01.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "V6061", "reg": "16.10.2018", "vin": "WSM00000003306406", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "29.10.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "V6062", "reg": "16.10.2018", "vin": "WSM00000003306407", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OE3316", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "22.07.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "V7646", "reg": "28.01.2019", "vin": "WSM00000003316840", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OL2062", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "15.01.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "Z2940", "reg": "26.06.2019", "vin": "WSM00000003334667", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OI9424", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "12.07.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "Z2941", "reg": "26.06.2019", "vin": "WSM00000003334668", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NL3944", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "25.09.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "Z3730", "reg": "26.08.2019", "vin": "WSM00000003334669", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "22.01.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "Z3732", "reg": "26.08.2019", "vin": "WSM00000003334670", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "OE3179", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "27.01.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "Z4785", "reg": "05.11.2019", "vin": "WSM00000003342540", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NJ7736", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "19.01.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "Z5279", "reg": "19.11.2019", "vin": "WSM00000003342543", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "NK7629", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "15.09.2026", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "Z5280", "reg": "19.11.2019", "vin": "WSM00000003342542", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "08.04.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "Z5331", "reg": "19.11.2019", "vin": "WSM00000003342544", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] },
-      { "ta": "26.07.2027", "bat": "—", "ins": "12.12.2026", "lic": "21.01.2027", "num": "В413F", "reg": "23.01.2023", "vin": "WSM00000003411796", "pads": "80%", "task": "Нет", "tire": "Стандарт", "type": "trailer", "hitch": "—", "model": "SCHMITZ SCS 24", "tacho": "15.10.2026", "driver": "—", "history": ["Учет в CSDD"] }
-    ];
-
-    // ГАРАНТИРОВАННОЕ СОХРАНЕНИЕ: Читаем из памяти браузера, если там пусто — берем базу
-    let fleetData = JSON.parse(localStorage.getItem('fleetMasterDataPro')) || embeddedFleet;
-    let actionLog = JSON.parse(localStorage.getItem('fleetLog')) || ["Система инициализирована"];
+    let fleetData = JSON.parse(localStorage.getItem('fleetMasterDataPro')) || [];
+    let actionLog = JSON.parse(localStorage.getItem('fleetLog')) || ["Синхронизация с Firestore..."];
     let currentSelectedIndex = null;
     let editingHitchIndex = null;
+
+    window.updateFleetFromCloud = function(cloudUnits) {
+        if (cloudUnits && cloudUnits.length > 0) {
+            fleetData = cloudUnits;
+            localStorage.setItem('fleetMasterDataPro', JSON.stringify(fleetData));
+            processData();
+            if (currentSelectedIndex !== null) renderTable();
+        }
+    };
+
+    window.updateLogsFromCloud = function(cloudLogs) {
+        if (cloudLogs && cloudLogs.length > 0) {
+            actionLog = cloudLogs;
+            renderLog();
+        }
+    };
 
     function checkPassword() {
         const pass = document.getElementById('passwordInput').value.trim();
@@ -420,19 +325,12 @@
         renderLog();
     }
 
-    function saveLocal() {
-        localStorage.setItem('fleetMasterDataPro', JSON.stringify(fleetData));
-        localStorage.setItem('fleetLog', JSON.stringify(actionLog));
-        initAlerts();
+    function addLog(text, num) {
+        const timeStr = new Date().toLocaleString('ru-RU');
+        actionLog.unshift(`[${timeStr}] Юрий: ${text}`);
+        if (actionLog.length > 40) actionLog.pop();
         renderLog();
-        if (window.syncWithFirebase) window.syncWithFirebase();
-    }
-
-    function addLog(text) {
-        const timeStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        actionLog.unshift(`[${timeStr}] ${text}`);
-        if (actionLog.length > 30) actionLog.pop();
-        saveLocal();
+        if (window.cloudLog) window.cloudLog(text, "", num);
     }
 
     function renderLog() {
@@ -460,7 +358,7 @@
         let expList = [], warnList = [], okList = [];
 
         fleetData.forEach((item, idx) => {
-            const ta = checkDateStatus(item.ta || item.ТЕХОСМОТР);
+            const ta = checkDateStatus(item.ta);
             if (ta.status === 'expired') { exp++; expList.push({idx, item}); }
             else if (ta.status === 'warning') { warn++; warnList.push({idx, item}); }
             else { ok++; okList.push({idx, item}); }
@@ -482,7 +380,7 @@
         list.forEach(el => {
             box.innerHTML += `
                 <div class="list-item" onclick="selectItem(${el.idx})">
-                    <span><b>${el.item.num || el.item.номер}</b> (${el.item.model || el.item.модель || ''})</span>
+                    <span><b>${el.item.num}</b> (${el.item.model || ''})</span>
                     <span style="color: ${color}; font-weight: bold;">${el.item.ta || '—'}</span>
                 </div>
             `;
@@ -512,14 +410,14 @@
     }
 
     function renderTable() {
-        if (currentSelectedIndex === null) return;
+        if (currentSelectedIndex === null || !fleetData[currentSelectedIndex]) return;
         const item = fleetData[currentSelectedIndex];
 
         const taStatus = checkDateStatus(item.ta);
         const tachoStatus = checkDateStatus(item.tacho);
         const insStatus = checkDateStatus(item.ins);
         const licStatus = checkDateStatus(item.lic);
-        const fullRegDate = item.reg || '—'; // Полная дата регистрации из CSDD
+        const fullRegDate = item.reg || '—';
 
         let archiveHtml = '';
         if (item.history && item.history.length > 0) {
@@ -557,8 +455,8 @@
         const res = prompt(`Изменить поле "${label}":`, cur);
         if (res !== null) {
             fleetData[index][field] = res.trim();
-            addLog(`Изменено поле "${label}" у ${fleetData[index].num}`);
-            saveLocal();
+            addLog(`Изменено поле "${label}" у ${fleetData[index].num}: ${res.trim()}`, fleetData[index].num);
+            if (window.cloudSaveUnit) window.cloudSaveUnit(fleetData[index]);
             renderTable();
         }
     }
@@ -590,13 +488,7 @@
         box.innerHTML = '';
         if (!q) { box.style.display = 'none'; return; }
 
-        let matches = [];
-        fleetData.forEach(el => {
-            if (el.num.toUpperCase().includes(q)) {
-                matches.push(el);
-            }
-        });
-
+        let matches = fleetData.filter(el => el.num.toUpperCase().includes(q));
         if (matches.length > 0) {
             matches.slice(0, 10).forEach(el => {
                 box.innerHTML += `<div class="modal-suggestion-item" onclick="selectModalSuggestion('${el.num}')"><b>${el.num}</b> — ${el.model} (${el.driver || '—'})</div>`;
@@ -635,7 +527,10 @@
         if (oldHitchNum !== '—') {
             fleetData.forEach(el => {
                 if (el.num.toUpperCase() === oldHitchNum.toUpperCase()) {
-                    if (el.hitch === targetTruck.num) el.hitch = '—';
+                    if (el.hitch === targetTruck.num) {
+                        el.hitch = '—';
+                        if (window.cloudSaveUnit) window.cloudSaveUnit(el);
+                    }
                 }
             });
         }
@@ -647,21 +542,23 @@
             fleetData.forEach(el => {
                 if (el.num.toUpperCase() === inheritedTrailer.toUpperCase()) {
                     el.hitch = targetTruck.num;
+                    if (window.cloudSaveUnit) window.cloudSaveUnit(el);
                 }
             });
-            addLog(`Зеркальный обмен: ${targetTruck.num} забрал прицеп ${inheritedTrailer} от ${newHitchNum}`);
+            addLog(`Зеркальный обмен: ${targetTruck.num} забрал прицеп ${inheritedTrailer} от ${newHitchNum}`, targetTruck.num);
         } else if (newHitchNum !== '—') {
             fleetData.forEach(el => {
                 if (el.num.toUpperCase() === newHitchNum.toUpperCase()) {
                     el.hitch = targetTruck.num;
+                    if (window.cloudSaveUnit) window.cloudSaveUnit(el);
                 }
             });
-            addLog(`Зеркальная сцепка между ${targetTruck.num} и ${newHitchNum}`);
+            addLog(`Зеркальная сцепка между ${targetTruck.num} и ${newHitchNum}`, targetTruck.num);
         } else {
-            addLog(`Отцеплен прицеп от ${targetTruck.num}`);
+            addLog(`Отцеплен прицеп от ${targetTruck.num}`, targetTruck.num);
         }
 
-        saveLocal();
+        if (window.cloudSaveUnit) window.cloudSaveUnit(targetTruck);
         renderTable();
         closeHitchModal();
         alert(`Успех! Сцепка обновлена.`);
@@ -674,18 +571,19 @@
             if (!item.history) item.history = [];
             item.history.unshift(`[${new Date().toLocaleDateString()}] ${note.trim()}`);
             item.task = "Нет";
-            addLog(`Ремонт по ${item.num} перенесен в архив`);
-            saveLocal();
+            addLog(`Ремонт по ${item.num} перенесен в архив (${note.trim()})`, item.num);
+            if (window.cloudSaveUnit) window.cloudSaveUnit(item);
             renderTable();
         }
     }
 
     function deleteItem(index) {
         if (confirm("Точно удалить эту единицу из базы?")) {
-            const num = fleetData[index].num;
+            const unit = fleetData[index];
+            const num = unit.num;
+            if (window.cloudDeleteUnit) window.cloudDeleteUnit(unit.id || num);
             fleetData.splice(index, 1);
-            addLog(`Удалена единица ${num} из базы`);
-            saveLocal();
+            addLog(`Удалена единица ${num} из базы`, num);
             currentSelectedIndex = null;
             document.getElementById("fleetTable").style.display = "none";
             document.getElementById("emptyMessage").style.display = "block";
@@ -701,6 +599,7 @@
         const model = prompt("Модель:", "VOLVO FH");
 
         const newItem = {
+            id: num.trim().toUpperCase(),
             type: type.trim().toLowerCase(),
             num: num.trim().toUpperCase(),
             model: model ? model.trim() : "—",
@@ -721,8 +620,8 @@
         };
 
         fleetData.push(newItem);
-        addLog(`Добавлена новая единица ${newItem.num}`);
-        saveLocal();
+        addLog(`Добавлена новая единица ${newItem.num}`, newItem.num);
+        if (window.cloudSaveUnit) window.cloudSaveUnit(newItem);
         document.getElementById('totalCount').innerText = fleetData.length;
         alert("Единица успешно добавлена!");
     }
