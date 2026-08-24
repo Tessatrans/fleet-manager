@@ -3,25 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Office Fleet Manager - Full Online Firestore Pro</title>
+    <title>Office Fleet Manager - Online Multi-User Live</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1850px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: none; }
         
         #authScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1877F2; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .auth-card { background: #fff; padding: 30px; border-radius: 16px; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); text-align: center; }
+        .auth-card { background: #fff; padding: 30px; border-radius: 16px; width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); text-align: center; }
         .auth-card h3 { margin-top: 0; color: #1877F2; font-size: 20px; }
-        .auth-card input { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 15px; text-align: center; }
+        .auth-card input, .auth-card select { width: 100%; padding: 12px; font-size: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 12px; text-align: center; }
         .auth-card button { width: 100%; background: #1877F2; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .auth-card button:hover { background: #166fe5; }
         .auth-error { color: #c5221f; font-size: 13px; margin-bottom: 10px; display: none; font-weight: 500; }
 
-        h2 { margin-top: 0; color: #1877F2; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .header-title { font-size: 22px; font-weight: bold; color: #1877F2; margin: 0; }
         
-        .top-actions { display: flex; gap: 10px; align-items: center; }
+        .user-status-bar { display: flex; align-items: center; gap: 12px; position: relative; }
+        .online-counter-btn { display: flex; align-items: center; gap: 6px; background: #e6f4ea; border: 1px solid #b7e1cd; color: #137333; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .user-badge-btn { display: flex; align-items: center; gap: 8px; background: #f0f4f9; border: 1px solid #d2e3fc; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; }
+        .user-avatar { width: 24px; height: 24px; background: #1877F2; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+
+        .users-dropdown { position: absolute; top: 100%; right: 0; width: 300px; background: #fff; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 15px; z-index: 1000; margin-top: 10px; display: none; }
+        .users-dropdown h4 { margin: 0 0 10px 0; font-size: 12px; color: #777; text-transform: uppercase; }
+        .user-item { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; font-size: 13px; margin-bottom: 4px; }
+        .user-item.active { background: #e8f0fe; font-weight: bold; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .dot-online { background: #34a853; }
+        .dot-offline { background: #bbb; }
+
+        .top-actions { display: flex; gap: 10px; }
         .btn-action { background: #1877F2; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
         .btn-success { background: #137333; }
-        .sync-badge { font-size: 11px; padding: 4px 8px; border-radius: 4px; background: #e6f4ea; color: #137333; font-weight: bold; border: 1px solid #b7e1cd; }
 
         .dashboard-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .summary-card { background: #f8f9fa; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; font-size: 13px; cursor: pointer; }
@@ -76,10 +89,10 @@
         .modal-suggestion-item:hover { background: #e8f0fe; color: #1877F2; }
     </style>
 
-    <!-- Подключение Firebase Firestore к общей базе парка -->
+    <!-- Firebase SDK для Live Online Presence и базы данных -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc, addDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, addDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAJ4ykJTV8CcB-HpluK6fmPNhG0jegI7_4",
@@ -93,7 +106,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app, "ai-studio-fleetmanager-245471da-6146-4754-bb2a-104e36cc9502");
 
-        // 1. Онлайн подписка на технику
+        // 1. Отслеживание техники
         onSnapshot(collection(db, "fleet_units"), (snapshot) => {
             if (!snapshot.empty) {
                 const cloudUnits = snapshot.docs.map(d => {
@@ -123,17 +136,43 @@
             }
         });
 
-        // 2. Онлайн подписка на общий лог
+        // 2. Отслеживание лога действий
         onSnapshot(query(collection(db, "action_logs"), orderBy("timestamp", "desc"), limit(40)), (snapshot) => {
             const logs = snapshot.docs.map(d => {
                 const data = d.data();
                 const time = data.timestamp ? new Date(data.timestamp).toLocaleString('ru-RU') : '';
-                return `[${time}] ${data.userName || 'Юрий'}: ${data.title} — ${data.description || ''}`;
+                return `[${time}] ${data.userName || 'Сотрудник'}: ${data.title} — ${data.description || ''}`;
             });
             window.updateLogsFromCloud(logs);
         });
 
-        // 3. Сохранение изменений в Firestore
+        // 3. Отслеживание сотрудников ОНЛАЙН (Presence)
+        onSnapshot(collection(db, "online_presence"), (snapshot) => {
+            const now = Date.now();
+            const onlineUsers = [];
+            snapshot.docs.forEach(d => {
+                const u = d.data();
+                // Если пользователь был активен в течение последних 2 минут
+                if (now - (u.lastSeen || 0) < 120000) {
+                    onlineUsers.push(u);
+                }
+            });
+            window.updateOnlineUsers(onlineUsers);
+        });
+
+        // 4. Отправка heartbeat (я в сети)
+        window.sendHeartbeat = async function(userName, userRole) {
+            if (!userName) return;
+            try {
+                const safeId = userName.replace(/[\/\\#,+()$~%.'":*?<>{}]/g, "_");
+                await setDoc(doc(db, "online_presence", safeId), {
+                    name: userName,
+                    role: userRole || "Сотрудник автопарка",
+                    lastSeen: Date.now()
+                }, { merge: true });
+            } catch (err) {}
+        };
+
         window.cloudSaveUnit = async function(unit) {
             try {
                 const unitRef = doc(db, "fleet_units", unit.id || unit.num);
@@ -155,13 +194,12 @@
             }
         };
 
-        // 4. Отправка лога в Firestore
-        window.cloudLog = async function(title, desc, num) {
+        window.cloudLog = async function(title, desc, num, authorName) {
             try {
                 await addDoc(collection(db, "action_logs"), {
                     title: title,
                     description: desc || '',
-                    userName: "Юрий",
+                    userName: authorName || "Юрий",
                     unitLicensePlate: num || '',
                     timestamp: new Date().toISOString(),
                     type: "general"
@@ -171,37 +209,76 @@
             }
         };
 
-        // 5. Удаление из Firestore
         window.cloudDeleteUnit = async function(unitId) {
             try {
                 await deleteDoc(doc(db, "fleet_units", unitId));
-            } catch (err) {
-                console.error("Ошибка удаления:", err);
-            }
+            } catch (err) {}
         };
     </script>
 </head>
 <body>
 
+<!-- Экран авторизации и выбора сотрудника -->
 <div id="authScreen">
     <div class="auth-card">
         <h3>🔒 Автопарк Teessatrans</h3>
-        <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Введите офисный пароль:</p>
+        <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Выберите ваш аккаунт и введите пароль:</p>
+        
         <div id="authError" class="auth-error">Неверный пароль!</div>
-        <input type="password" id="passwordInput" placeholder="Пароль..." onkeydown="if(event.key === 'Enter') checkPassword()">
-        <button onclick="checkPassword()">Войти</button>
+        
+        <select id="userSelect" onchange="onSelectUserChange()">
+            <option value="Юрий Волков|Руководитель автопарка / Fleet Manager">👤 Юрий Волков (Fleet Manager)</option>
+            <option value="yudjin|Диспетчер маршрутов" selected>👤 yudjin (Диспетчер-логист)</option>
+            <option value="Раймонд|Дежурный диспетчер">👤 Раймонд (Дежурный диспетчер)</option>
+            <option value="Сергей|Руководитель / Boss">👤 Сергей (Руководитель)</option>
+            <option value="Рейнис|Главный логист">👤 Рейнис (Главный логист)</option>
+            <option value="Янис|Механик / Сервис">👤 Янис (Механик)</option>
+            <option value="custom">✍️ Ввести другое имя...</option>
+        </select>
+        
+        <input type="text" id="customNameInput" placeholder="Ваше имя..." style="display:none;">
+        <input type="password" id="passwordInput" placeholder="Офисный пароль..." onkeydown="if(event.key === 'Enter') checkPassword()">
+        <button onclick="checkPassword()">Войти в систему</button>
     </div>
 </div>
 
 <div class="container" id="mainContainer">
-    <h2>
-        🚚 Управление автопарком и прицепами (Всего: <span id="totalCount">0</span> ед.)
-        <div class="top-actions">
-            <span class="sync-badge">🟢 Cloud Firestore Online</span>
-            <button class="btn-action btn-success" onclick="addNewItem()">➕ Добавить единицу</button>
-            <button class="btn-action" onclick="exportData()">💾 Скачать базу</button>
+    <div class="header-top">
+        <div>
+            <h2 class="header-title">🚚 Управление автопарком Teessatrans</h2>
+            <span style="font-size: 12px; color: #666;">База CSDD & Ремонты: <b id="totalCount">0</b> единиц</span>
         </div>
-    </h2>
+
+        <!-- Панель статуса пользователей Онлайн -->
+        <div class="user-status-bar">
+            <div class="online-counter-btn" onclick="toggleUsersDropdown()">
+                <span class="status-dot dot-online"></span>
+                <span>Онлайн: <b id="onlineCountBadge">1</b></span>
+            </div>
+
+            <div class="user-badge-btn" onclick="toggleUsersDropdown()">
+                <div class="user-avatar" id="currentUserAvatar">Y</div>
+                <div>
+                    <b id="currentUserName">yudjin</b><br>
+                    <span id="currentUserRole" style="font-size: 10px; color: #666;">Диспетчер</span>
+                </div>
+            </div>
+
+            <!-- Выпадающий список всех сотрудников и их онлайн-статуса -->
+            <div class="users-dropdown" id="usersDropdown">
+                <h4>Сотрудники автопарка</h4>
+                <div id="usersListContainer"></div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; text-align: center;">
+                    <button onclick="logout()" style="background:none; border:none; color:#c5221f; font-size:12px; font-weight:bold; cursor:pointer;">🚪 Сменить аккаунт</button>
+                </div>
+            </div>
+
+            <div class="top-actions">
+                <button class="btn-action btn-success" onclick="addNewItem()">➕ Добавить ТС</button>
+                <button class="btn-action" onclick="exportData()">💾 Резервная копия</button>
+            </div>
+        </div>
+    </div>
 
     <div class="dashboard-summary">
         <div class="summary-card card-danger" onclick="toggleList('expiredListBox')">
@@ -254,15 +331,15 @@
         </thead>
         <tbody id="tableBody"></tbody>
     </table>
-    <div id="emptyMessage" class="empty-msg">Используйте поисковую строку выше для поиска...</div>
+    <div id="emptyMessage" class="empty-msg">Используйте поисковую строку выше для поиска или выберите фильтр...</div>
 
     <div class="log-section">
-        <h4>📋 Общий лог действий и изменений в парке (Firestore Live)</h4>
+        <h4>📋 Общий лог действий и изменений в парке (Live Firestore)</h4>
         <div id="actionLogContainer"></div>
     </div>
 </div>
 
-<!-- Модальное окно сцепки -->
+<!-- Модальное окно перецепки -->
 <div id="hitchModal">
     <div class="modal-content">
         <h3>🔗 Изменение сцепки</h3>
@@ -278,10 +355,132 @@
 </div>
 
 <script>
+    const allStaffMembers = [
+        { name: "Юрий Волков", role: "Руководитель автопарка / Fleet Manager" },
+        { name: "yudjin", role: "Диспетчер маршрутов" },
+        { name: "Раймонд", role: "Дежурный диспетчер" },
+        { name: "Сергей", role: "Руководитель / Boss" },
+        { name: "Рейнис", role: "Главный логист" },
+        { name: "Янис", role: "Механик / Сервис" }
+    ];
+
+    let currentLoggedInUser = JSON.parse(sessionStorage.getItem('loggedUser')) || { name: "yudjin", role: "Диспетчер маршрутов" };
+    let currentOnlineList = [];
     let fleetData = JSON.parse(localStorage.getItem('fleetMasterDataPro')) || [];
-    let actionLog = JSON.parse(localStorage.getItem('fleetLog')) || ["Синхронизация с Firestore..."];
+    let actionLog = JSON.parse(localStorage.getItem('fleetLog')) || ["Подключение к Firestore..."];
     let currentSelectedIndex = null;
     let editingHitchIndex = null;
+
+    function onSelectUserChange() {
+        const val = document.getElementById('userSelect').value;
+        const customInput = document.getElementById('customNameInput');
+        if (val === 'custom') {
+            customInput.style.display = 'block';
+        } else {
+            customInput.style.display = 'none';
+        }
+    }
+
+    function checkPassword() {
+        const pass = document.getElementById('passwordInput').value.trim();
+        if (pass === 'tt13') {
+            const selectVal = document.getElementById('userSelect').value;
+            let uName = "yudjin";
+            let uRole = "Диспетчер маршрутов";
+
+            if (selectVal === 'custom') {
+                uName = document.getElementById('customNameInput').value.trim() || "Сотрудник";
+                uRole = "Диспетчер";
+            } else {
+                const parts = selectVal.split('|');
+                uName = parts[0];
+                uRole = parts[1];
+            }
+
+            currentLoggedInUser = { name: uName, role: uRole };
+            sessionStorage.setItem('loggedUser', JSON.stringify(currentLoggedInUser));
+            sessionStorage.setItem('isLoggedIn', 'true');
+
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+
+            applyUserUI();
+            processData();
+            startPresenceLoop();
+        } else {
+            document.getElementById('authError').style.display = 'block';
+        }
+    }
+
+    function applyUserUI() {
+        document.getElementById('currentUserName').innerText = currentLoggedInUser.name;
+        document.getElementById('currentUserRole').innerText = currentLoggedInUser.role;
+        document.getElementById('currentUserAvatar').innerText = (currentLoggedInUser.name[0] || 'U').toUpperCase();
+    }
+
+    function logout() {
+        sessionStorage.removeItem('isLoggedIn');
+        sessionStorage.removeItem('loggedUser');
+        location.reload();
+    }
+
+    function toggleUsersDropdown() {
+        const d = document.getElementById('usersDropdown');
+        d.style.display = (d.style.display === 'block') ? 'none' : 'block';
+        renderUsersList();
+    }
+
+    window.updateOnlineUsers = function(onlineList) {
+        currentOnlineList = onlineList || [];
+        document.getElementById('onlineCountBadge').innerText = Math.max(1, currentOnlineList.length);
+        renderUsersList();
+    };
+
+    function renderUsersList() {
+        const container = document.getElementById('usersListContainer');
+        if (!container) return;
+
+        const onlineNames = currentOnlineList.map(u => u.name.toLowerCase());
+        
+        let html = '';
+        allStaffMembers.forEach(staff => {
+            const isOnline = onlineNames.includes(staff.name.toLowerCase()) || staff.name.toLowerCase() === currentLoggedInUser.name.toLowerCase();
+            const isMe = staff.name.toLowerCase() === currentLoggedInUser.name.toLowerCase();
+
+            html += `
+                <div class="user-item ${isMe ? 'active' : ''}">
+                    <div>
+                        <span class="status-dot ${isOnline ? 'dot-online' : 'dot-offline'}"></span>
+                        <b>${staff.name}</b> ${isMe ? '<span style="font-size:10px; background:#1877F2; color:#fff; padding:1px 5px; border-radius:3px; margin-left:4px;">Вы</span>' : ''}<br>
+                        <span style="font-size:11px; color:#666; margin-left:14px;">${staff.role}</span>
+                    </div>
+                    <div style="font-size:11px; font-weight:bold; color:${isOnline ? '#137333' : '#888'};">
+                        ${isOnline ? 'В сети' : 'Не в сети'}
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function startPresenceLoop() {
+        if (window.sendHeartbeat) {
+            window.sendHeartbeat(currentLoggedInUser.name, currentLoggedInUser.role);
+            setInterval(() => {
+                window.sendHeartbeat(currentLoggedInUser.name, currentLoggedInUser.role);
+            }, 30000); // каждые 30 секунд
+        }
+    }
+
+    window.onload = function() {
+        if (sessionStorage.getItem('isLoggedIn') === 'true') {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+            applyUserUI();
+            processData();
+            startPresenceLoop();
+        }
+    };
 
     window.updateFleetFromCloud = function(cloudUnits) {
         if (cloudUnits && cloudUnits.length > 0) {
@@ -299,26 +498,6 @@
         }
     };
 
-    function checkPassword() {
-        const pass = document.getElementById('passwordInput').value.trim();
-        if (pass === 'tt13') {
-            document.getElementById('authScreen').style.display = 'none';
-            document.getElementById('mainContainer').style.display = 'block';
-            sessionStorage.setItem('isLoggedIn', 'true');
-            processData();
-        } else {
-            document.getElementById('authError').style.display = 'block';
-        }
-    }
-
-    window.onload = function() {
-        if (sessionStorage.getItem('isLoggedIn') === 'true') {
-            document.getElementById('authScreen').style.display = 'none';
-            document.getElementById('mainContainer').style.display = 'block';
-            processData();
-        }
-    };
-
     function processData() {
         document.getElementById('totalCount').innerText = fleetData.length;
         initAlerts();
@@ -327,10 +506,10 @@
 
     function addLog(text, num) {
         const timeStr = new Date().toLocaleString('ru-RU');
-        actionLog.unshift(`[${timeStr}] Юрий: ${text}`);
+        actionLog.unshift(`[${timeStr}] ${currentLoggedInUser.name}: ${text}`);
         if (actionLog.length > 40) actionLog.pop();
         renderLog();
-        if (window.cloudLog) window.cloudLog(text, "", num);
+        if (window.cloudLog) window.cloudLog(text, "", num, currentLoggedInUser.name);
     }
 
     function renderLog() {
